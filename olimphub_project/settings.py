@@ -74,3 +74,6 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 LOGIN_REDIRECT_URL  = '/profile/'
 LOGOUT_REDIRECT_URL = '/'  
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
