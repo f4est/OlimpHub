@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Scoreboard: {{ olymp.title }}</h3>
+<table class="table table-striped">
+  <thead><tr><th>#</th><th>User</th><th>Total</th></tr></thead>
+  <tbody>
+  {% for r in results %}
+    <tr><td>{{ forloop.counter }}</td><td>{{ r.user }}</td><td>{{ r.total }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

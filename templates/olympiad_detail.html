@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<a href="{% url 'index' %}" class="text-decoration-none small">&larr; back</a>
+
+<h2 class="fw-bold mt-2">{{ olymp.title }}</h2>
+<p class="text-muted">{{ olymp.subject }}</p>
+
+<div class="mb-4">
+  <span class="badge bg-info">{{ olymp.get_status_display }}</span>
+  <span class="ms-2">{{ olymp.start_at|date:"Y-m-d H:i" }} – {{ olymp.end_at|date:"Y-m-d H:i" }}</span>
+</div>
+
+{% if user.is_authenticated %}
+  {% if is_registered %}
+    <a href="{% url 'tasks' olymp.pk %}" class="btn btn-success">Go to tasks</a>
+  {% else %}
+    <form method="post" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-primary">Register</button>
+    </form>
+  {% endif %}
+{% else %}
+  <p><a href="{% url 'login' %}?next={{ request.path }}">Login</a> to register.</p>
+{% endif %}
+{% endblock %}

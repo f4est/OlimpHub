@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="fw-bold mb-4">Olympiads</h1>
+
+<ul class="nav nav-pills mb-3">
+  {% for code, label in status_tabs %}
+    <li class="nav-item">
+      <a class="nav-link {% if current_status == code %}active{% endif %}"
+         href="?{% if q %}q={{ q }}&{% endif %}{% if code != 'all' %}status={{ code }}{% endif %}">
+        {{ label }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+<div class="row g-4">
+{% for o in olympiads %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-body">
+        <h5 class="card-title fw-semibold">{{ o.title }}</h5>
+        <span class="badge bg-secondary">{{ o.subject }}</span>
+        <p class="mt-2 mb-3 small">
+          {{ o.start_at|date:"Y-m-d H:i" }} → {{ o.end_at|date:"H:i" }}
+        </p>
+        <a href="{% url 'olymp_detail' o.pk %}" class="btn btn-primary btn-sm">Details</a>
+      </div>
+    </div>
+  </div>
+{% empty %}
+  <p>No olympiads found.</p>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+/* static/css/style.css */
+body            { font-family: 'Inter', sans-serif; }
+.navbar-brand    { letter-spacing: .5px; }
+.card            { border-radius: 1rem; }
+.btn-primary     { --bs-btn-bg:#0066ff; --bs-btn-border-color:#0066ff; }

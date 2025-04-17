@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3 class="mb-3">Tasks for {{ olymp.title }}</h3>
+{% for p in problems %}
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">{{ p.title }} ({{ p.max_score }} pts)</h5>
+    <a href="{{ p.statement_file.url }}" class="btn btn-outline-secondary btn-sm" target="_blank">View statement</a>
+
+    <form action="{% url 'submit' p.id %}" method="post" enctype="multipart/form-data" class="mt-2">
+        {% csrf_token %}
+        <input type="file" name="file" required>
+        <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<a href="{% url 'scoreboard' olymp.pk %}" class="btn btn-secondary">Scoreboard</a>
+{% endblock %}
