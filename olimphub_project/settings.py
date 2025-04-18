@@ -31,6 +31,11 @@ MIDDLEWARE = [
 
 ]
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",          # стандартный
+    "guardian.backends.ObjectPermissionBackend",          # объектные права
+]
+
 ROOT_URLCONF = 'olimphub_project.urls'
 
 TEMPLATES = [
@@ -81,3 +86,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_URL = '/static/'
 
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+INSTALLED_APPS += ["guardian"]
+AUTHENTICATION_BACKENDS += ["guardian.backends.ObjectPermissionBackend"]
+ANONYMOUS_USER_NAME = "anonymous"
