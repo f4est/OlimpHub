@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' olympiad.pk %}" class="text-decoration-none">{{ olympiad.title }}</a></li>
+    {% if object %}
+      <li class="breadcrumb-item active">Редактирование задания</li>
+    {% else %}
+      <li class="breadcrumb-item active">Добавление задания</li>
+    {% endif %}
+  </ol>
+</nav>
+
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h2 class="fw-bold mb-4">
+          {% if object %}
+            <i class="bi bi-pencil-square me-2 text-primary"></i>Редактирование задания
+          {% else %}
+            <i class="bi bi-plus-circle me-2 text-success"></i>Добавление задания
+          {% endif %}
+        </h2>
+        
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label for="{{ form.title.id_for_label }}" class="form-label fw-medium">{{ form.title.label }}</label>
+            {{ form.title|add_class:"form-control" }}
+            {% if form.title.errors %}
+              <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}" class="form-label fw-medium">{{ form.description.label }}</label>
+            {{ form.description|add_class:"form-control" }}
+            {% if form.description.errors %}
+              <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+            {% endif %}
+            <small class="form-text text-muted">Краткое описание задания, отображаемое в списке заданий</small>
+          </div>
+          
+          <div class="mb-3">
+            <label for="{{ form.max_score.id_for_label }}" class="form-label fw-medium">{{ form.max_score.label }}</label>
+            {{ form.max_score|add_class:"form-control" }}
+            {% if form.max_score.errors %}
+              <div class="invalid-feedback d-block">{{ form.max_score.errors }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="mb-4">
+            <label for="{{ form.statement_file.id_for_label }}" class="form-label fw-medium">{{ form.statement_file.label }}</label>
+            {{ form.statement_file|add_class:"form-control" }}
+            {% if form.statement_file.errors %}
+              <div class="invalid-feedback d-block">{{ form.statement_file.errors }}</div>
+            {% endif %}
+            <small class="form-text text-muted">Только PDF-файлы</small>
+            
+            {% if object and object.statement_file %}
+              <div class="mt-2">
+                <a href="{{ object.statement_file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                  <i class="bi bi-file-earmark-pdf me-1"></i>Посмотреть текущий файл
+                </a>
+              </div>
+            {% endif %}
+          </div>
+          
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'olymp_detail' olympiad.pk %}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Отмена
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>{% if object %}Сохранить{% else %}Добавить{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

@@ -1,34 +1,270 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1 class="fw-bold mb-4">Olympiads</h1>
+<div class="mb-5">
+  <div class="py-3 mb-4 bg-primary bg-gradient text-white rounded-4 shadow">
+    <div class="container py-3">
+      <h1 class="fw-bold mb-3 display-5">Добро пожаловать в OlimpHub</h1>
+      <p class="lead mb-0">Платформа для проведения и участия в образовательных соревнованиях и олимпиадах</p>
+    </div>
+  </div>
+  
+  <!-- Статистика -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <i class="bi bi-trophy text-warning fs-1 mb-3"></i>
+        <div class="stat-number">{{ olympiads.count }}</div>
+        <div class="stat-label">Активных соревнований</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <i class="bi bi-mortarboard-fill text-primary fs-1 mb-3"></i>
+        <div class="stat-number">{{participants_count|default:"0"}}</div>
+        <div class="stat-label">Участников</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <i class="bi bi-clipboard2-check text-success fs-1 mb-3"></i>
+        <div class="stat-number">{{submissions_count|default:"0"}}</div>
+        <div class="stat-label">Решений отправлено</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<ul class="nav nav-pills mb-3">
-  {% for code, label in status_tabs %}
-    <li class="nav-item">
-      <a class="nav-link {% if current_status == code %}active{% endif %}"
-         href="?{% if q %}q={{ q }}&{% endif %}{% if code != 'all' %}status={{ code }}{% endif %}">
-        {{ label }}
-      </a>
-    </li>
-  {% endfor %}
-</ul>
+<h2 class="fw-bold mb-4"><i class="bi bi-list-stars me-2 text-primary"></i>Соревнования</h2>
 
+<!-- Вкладки статусов -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <ul class="nav nav-pills">
+    {% for code, label in status_tabs %}
+      <li class="nav-item">
+        <a class="nav-link {% if current_status == code %}active{% endif %}"
+           href="?{% if q %}q={{ q }}&{% endif %}{% if current_sort != 'popularity' %}sort={{ current_sort }}&{% endif %}{% if current_subject %}subject={{ current_subject }}&{% endif %}{% if current_difficulty %}difficulty={{ current_difficulty }}&{% endif %}{% if code != 'all' %}status={{ code }}{% endif %}">
+          {% if code == 'active' %}
+            <i class="bi bi-play-circle me-1"></i>
+          {% elif code == 'upcoming' %}
+            <i class="bi bi-calendar-event me-1"></i>
+          {% elif code == 'closed' %}
+            <i class="bi bi-flag-fill me-1"></i>
+          {% else %}
+            <i class="bi bi-grid-3x3-gap me-1"></i>
+          {% endif %}
+          {{ label }}
+          {% if code == 'active' %}
+            <span class="badge bg-primary rounded-pill ms-1">{{ active_count }}</span>
+          {% elif code == 'upcoming' %}
+            <span class="badge bg-warning rounded-pill ms-1">{{ upcoming_count }}</span>
+          {% elif code == 'closed' %}
+            <span class="badge bg-secondary rounded-pill ms-1">{{ closed_count }}</span>
+          {% endif %}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+  
+  {% if user.is_authenticated and user.profile.is_teacher %}
+  <a href="{% url 'olymp_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Создать соревнование
+  </a>
+  {% endif %}
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="searchInput" placeholder="Поиск соревнований..." value="{{ q }}" 
+                 onkeyup="if(event.keyCode === 13) applyFilters()">
+        </div>
+      </div>
+      
+      <div class="col-md-2">
+        <select class="form-select" id="sortSelect" onchange="applyFilters()">
+          {% for sort_code, sort_label in sort_options %}
+            <option value="{{ sort_code }}" {% if current_sort == sort_code %}selected{% endif %}>{{ sort_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="col-md-2">
+        <select class="form-select" id="subjectSelect" onchange="applyFilters()">
+          <option value="">Все предметы</option>
+          {% for subject in available_subjects %}
+            <option value="{{ subject }}" {% if current_subject == subject %}selected{% endif %}>{{ subject }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="col-md-2">
+        <select class="form-select" id="difficultySelect" onchange="applyFilters()">
+          <option value="">Любая сложность</option>
+          {% for diff_code, diff_label in difficulty_choices %}
+            <option value="{{ diff_code }}" {% if current_difficulty == diff_code %}selected{% endif %}>{{ diff_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      {% if user.is_authenticated and user.profile.is_teacher %}
+      <div class="col-md-2">
+        <div class="form-check form-switch mt-2">
+          <input class="form-check-input" type="checkbox" id="myOlympiadsToggle" {% if show_my %}checked{% endif %} onchange="applyFilters()">
+          <label class="form-check-label" for="myOlympiadsToggle">Мои соревнования</label>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Список соревнований -->
 <div class="row g-4">
 {% for o in olympiads %}
   <div class="col-md-6 col-lg-4">
     <div class="card h-100 shadow-sm border-0">
+      <div class="card-header bg-transparent border-0 pt-3">
+        {% if o.status == 'active' %}
+          <span class="olympiad-status status-active float-end">
+            <i class="bi bi-play-circle me-1"></i>Активно
+          </span>
+        {% elif o.status == 'upcoming' %}
+          <span class="olympiad-status status-upcoming float-end">
+            <i class="bi bi-calendar-event me-1"></i>Скоро
+          </span>
+        {% else %}
+          <span class="olympiad-status status-finished float-end">
+            <i class="bi bi-flag-fill me-1"></i>Завершено
+          </span>
+        {% endif %}
+      </div>
       <div class="card-body">
         <h5 class="card-title fw-semibold">{{ o.title }}</h5>
-        <span class="badge bg-secondary">{{ o.subject }}</span>
-        <p class="mt-2 mb-3 small">
-          {{ o.start_at|date:"Y-m-d H:i" }} → {{ o.end_at|date:"H:i" }}
-        </p>
-        <a href="{% url 'olymp_detail' o.pk %}" class="btn btn-primary btn-sm">Details</a>
+        <div class="mb-3">
+          <span class="badge bg-secondary">{{ o.subject }}</span>
+          {% if o.difficulty %}
+            <span class="badge {% if o.difficulty == 'easy' %}bg-success{% elif o.difficulty == 'medium' %}bg-warning{% else %}bg-danger{% endif %}">
+              {% if o.difficulty == 'easy' %}Легкий
+              {% elif o.difficulty == 'medium' %}Средний
+              {% else %}Сложный{% endif %}
+            </span>
+          {% endif %}
+        </div>
+        <div class="d-flex align-items-center mb-3 small text-muted">
+          <i class="bi bi-calendar3 me-2"></i>
+          <span>{{ o.start_at|date:"d.m.Y H:i" }} → {{ o.end_at|date:"d.m.Y H:i" }}</span>
+        </div>
+        {% if o.description %}
+          <p class="card-text small mb-3">{{ o.description|truncatechars:100 }}</p>
+        {% endif %}
+        <div class="d-flex justify-content-between align-items-center">
+          <a href="{% url 'olymp_detail' o.pk %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-info-circle me-1"></i>Подробнее
+          </a>
+          <div class="small text-muted">
+            <i class="bi bi-people me-1"></i>{{ o.participants.count|default:"0" }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 {% empty %}
-  <p>No olympiads found.</p>
+  <div class="col-12">
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle me-2"></i>Соревнования не найдены. Попробуйте изменить параметры фильтрации.
+    </div>
+  </div>
 {% endfor %}
 </div>
+
+<!-- Пагинация -->
+{% if olympiads.has_other_pages %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if olympiads.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if current_sort != 'popularity' %}&sort={{ current_sort }}{% endif %}{% if current_subject %}&subject={{ current_subject }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if show_my %}&my=1{% endif %}">
+          <i class="bi bi-chevron-double-left"></i>
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ olympiads.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if current_sort != 'popularity' %}&sort={{ current_sort }}{% endif %}{% if current_subject %}&subject={{ current_subject }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if show_my %}&my=1{% endif %}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+    {% endif %}
+    
+    {% for num in olympiads.paginator.page_range %}
+      {% if olympiads.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+      {% elif num > olympiads.number|add:'-3' and num < olympiads.number|add:'3' %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if current_sort != 'popularity' %}&sort={{ current_sort }}{% endif %}{% if current_subject %}&subject={{ current_subject }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if show_my %}&my=1{% endif %}">
+            {{ num }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    
+    {% if olympiads.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ olympiads.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if current_sort != 'popularity' %}&sort={{ current_sort }}{% endif %}{% if current_subject %}&subject={{ current_subject }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if show_my %}&my=1{% endif %}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ olympiads.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if current_sort != 'popularity' %}&sort={{ current_sort }}{% endif %}{% if current_subject %}&subject={{ current_subject }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}{% if show_my %}&my=1{% endif %}">
+          <i class="bi bi-chevron-double-right"></i>
+        </a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+<script>
+function applyFilters() {
+  // Собираем все параметры фильтрации
+  const q = document.getElementById('searchInput').value;
+  const sort = document.getElementById('sortSelect').value;
+  const subject = document.getElementById('subjectSelect').value;
+  const difficulty = document.getElementById('difficultySelect').value;
+  const status = "{{ current_status }}";
+  
+  // Проверяем наличие чекбокса "Мои соревнования"
+  let myOlympiads = '';
+  const myOlympiadsToggle = document.getElementById('myOlympiadsToggle');
+  if (myOlympiadsToggle && myOlympiadsToggle.checked) {
+    myOlympiads = '&my=1';
+  }
+  
+  // Строим URL с параметрами
+  let url = '?';
+  if (q) url += `q=${encodeURIComponent(q)}&`;
+  if (sort && sort !== 'popularity') url += `sort=${sort}&`;
+  if (subject) url += `subject=${encodeURIComponent(subject)}&`;
+  if (difficulty) url += `difficulty=${difficulty}&`;
+  if (status && status !== 'all') url += `status=${status}`;
+  url += myOlympiads;
+  
+  // Переходим по новому URL
+  window.location.href = url;
+}
+
+// Обрабатываем клик по вкладкам навигации, чтобы учесть статус
+document.addEventListener('DOMContentLoaded', function() {
+  const statusTabs = document.querySelectorAll('.nav-pills .nav-link');
+  statusTabs.forEach(tab => {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+      window.location.href = href;
+    });
+  });
+});
+</script>
 {% endblock %}

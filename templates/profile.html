@@ -1,22 +1,299 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2 class="fw-bold mb-4">My Achievements</h2>
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div class="position-relative d-inline-block">
+            {% if user.profile.avatar %}
+              <img src="{{ user.profile.avatar.url }}" class="rounded-circle mb-3 mx-auto d-block" 
+                  style="width: 100px; height: 100px; object-fit: cover;" alt="{{ user.username }}">
+            {% else %}
+              <div class="bg-primary bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center mb-3 mx-auto" 
+                  style="width: 100px; height: 100px; font-size: 3rem;">
+                <i class="bi bi-person"></i>
+              </div>
+            {% endif %}
+            
+            {% if user.profile.is_teacher %}
+              <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning">
+                <i class="bi bi-mortarboard-fill"></i>
+              </span>
+            {% elif user.profile.is_admin %}
+              <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-danger">
+                <i class="bi bi-shield-check"></i>
+              </span>
+            {% endif %}
+          </div>
+          
+          <h3 class="fw-bold">
+            {% if user.first_name or user.last_name %}
+              {{ user.first_name }} {{ user.last_name }}
+            {% else %}
+              {{ user.username }}
+            {% endif %}
+          </h3>
+          <p class="text-muted mb-1">{{ user.email }}</p>
+          {% if user.profile.phone %}
+            <p class="small text-muted mb-3">
+              <i class="bi bi-telephone me-1"></i>{{ user.profile.phone }}
+            </p>
+          {% endif %}
+          
+          <div class="d-inline-block px-3 py-1 mb-3 rounded-pill 
+              {% if user.profile.is_student %}bg-info{% elif user.profile.is_teacher %}bg-warning{% else %}bg-danger{% endif %} 
+              bg-opacity-25 fw-medium small">
+            {% if user.profile.is_student %}
+              <i class="bi bi-person-badge me-1"></i>Студент
+            {% elif user.profile.is_teacher %}
+              <i class="bi bi-mortarboard-fill me-1"></i>Преподаватель
+            {% else %}
+              <i class="bi bi-shield-check me-1"></i>Администратор
+            {% endif %}
+          </div>
+        </div>
+        
+        {% if user.profile.organization or user.profile.position %}
+          <div class="mb-4">
+            <h6 class="fw-semibold mb-3">Информация</h6>
+            {% if user.profile.organization %}
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-building me-2 text-muted"></i>
+                <span>{{ user.profile.organization }}</span>
+              </div>
+            {% endif %}
+            {% if user.profile.position %}
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-briefcase me-2 text-muted"></i>
+                <span>{{ user.profile.position }}</span>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+        
+        {% if user.profile.bio %}
+          <div class="mb-4">
+            <h6 class="fw-semibold mb-3">О себе</h6>
+            <p class="text-muted">{{ user.profile.bio }}</p>
+          </div>
+        {% endif %}
+        
+        {% if user.profile.additional_info %}
+          <div class="mb-4">
+            <h6 class="fw-semibold mb-3">Дополнительные сведения</h6>
+            <p class="text-muted">{{ user.profile.additional_info }}</p>
+          </div>
+        {% endif %}
+        
+        <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary btn-sm w-100">
+          <i class="bi bi-pencil-square me-1"></i>Редактировать профиль
+        </a>
+      </div>
+    </div>
 
-<table class="table table-hover align-middle">
-  <thead class="table-light">
-    <tr><th>Olympiad</th><th>Score</th><th>Place</th><th></th></tr>
-  </thead>
-  <tbody>
-  {% for r in rows %}
-    <tr>
-      <td><a href="{% url 'olymp_detail' r.olymp.pk %}">{{ r.olymp.title }}</a></td>
-      <td>{{ r.total }}</td>
-      <td>{{ r.place }}</td>
-      <td class="fs-4">{{ r.medal }}</td>
-    </tr>
-  {% empty %}
-    <tr><td colspan="4" class="text-center py-4">No participations yet.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+    {% if user.profile.is_teacher or user.profile.is_admin %}
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h5 class="card-title fw-bold mb-3">
+          <i class="bi bi-speedometer2 me-2 text-primary"></i>Панель управления
+        </h5>
+        
+        <div class="list-group list-group-flush">
+          <a href="{% url 'olymp_create' %}" class="list-group-item list-group-item-action border-0 ps-0">
+            <i class="bi bi-plus-circle me-2 text-success"></i>Создать соревнование
+          </a>
+          <a href="{% url 'index' %}?my=true" class="list-group-item list-group-item-action border-0 ps-0">
+            <i class="bi bi-list-check me-2 text-primary"></i>Мои соревнования
+          </a>
+          
+          {% if user.profile.is_admin %}
+          <a href="/admin/" class="list-group-item list-group-item-action border-0 ps-0">
+            <i class="bi bi-gear me-2 text-secondary"></i>Админ-панель Django
+          </a>
+          <a href="{% url 'user_list' %}" class="list-group-item list-group-item-action border-0 ps-0">
+            <i class="bi bi-people me-2 text-info"></i>Управление пользователями
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  
+  <div class="col-lg-8">
+    <h4 class="fw-bold mb-4"><i class="bi bi-trophy me-2 text-warning"></i>Мои достижения</h4>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Соревнование</th>
+                <th class="text-center">Баллы</th>
+                <th class="text-center">Место</th>
+                <th class="text-center">Награда</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>
+                  <a href="{% url 'olymp_detail' r.olymp.pk %}" class="text-decoration-none fw-medium">
+                    {{ r.olymp.title }}
+                  </a>
+                  <div class="small text-muted">{{ r.olymp.subject }}</div>
+                </td>
+                <td class="text-center fw-bold">{{ r.total }}</td>
+                <td class="text-center">
+                  {% if r.place <= 3 %}
+                    <span class="badge bg-primary rounded-pill">{{ r.place }}</span>
+                  {% else %}
+                    {{ r.place }}
+                  {% endif %}
+                </td>
+                <td class="text-center fs-4">{{ r.medal }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-4">
+                  <div class="text-muted">
+                    <i class="bi bi-info-circle me-2"></i>У вас пока нет участий в соревнованиях
+                  </div>
+                  <a href="{% url 'index' %}" class="btn btn-primary btn-sm mt-3">
+                    <i class="bi bi-search me-1"></i>Найти соревнования
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {% if user.profile.is_teacher %}
+    <h4 class="fw-bold mb-4 mt-5"><i class="bi bi-calendar-check me-2 text-primary"></i>Мои соревнования</h4>
+    
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Название</th>
+                <th>Статус</th>
+                <th class="text-center">Участники</th>
+                <th class="text-end">Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for o in user.created_olympiads.all %}
+              <tr>
+                <td>
+                  <a href="{% url 'olymp_detail' o.pk %}" class="text-decoration-none fw-medium">
+                    {{ o.title }}
+                  </a>
+                  <div class="small text-muted">{{ o.subject }}</div>
+                </td>
+                <td>
+                  {% if o.status == 'active' %}
+                    <span class="olympiad-status status-active">
+                      <i class="bi bi-play-circle me-1"></i>Активно
+                    </span>
+                  {% elif o.status == 'upcoming' %}
+                    <span class="olympiad-status status-upcoming">
+                      <i class="bi bi-calendar-event me-1"></i>Скоро
+                    </span>
+                  {% else %}
+                    <span class="olympiad-status status-finished">
+                      <i class="bi bi-flag-fill me-1"></i>Завершено
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-secondary rounded-pill">{{ o.participants.count }}</span>
+                </td>
+                <td class="text-end">
+                  <a href="{% url 'olymp_detail' o.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <a href="{% url 'olymp_edit' o.pk %}" class="btn btn-sm btn-outline-secondary me-1">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a href="{% url 'scoreboard' o.pk %}" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-trophy"></i>
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-4">
+                  <div class="text-muted">
+                    <i class="bi bi-info-circle me-2"></i>Вы пока не создали ни одного соревнования
+                  </div>
+                  <a href="{% url 'olymp_create' %}" class="btn btn-primary btn-sm mt-3">
+                    <i class="bi bi-plus-lg me-1"></i>Создать соревнование
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    {% if user.profile.is_admin %}
+    <h4 class="fw-bold mb-4 mt-5"><i class="bi bi-shield-check me-2 text-danger"></i>Администрирование</h4>
+    
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body text-center">
+            <div class="display-5 mb-3 text-primary">
+              <i class="bi bi-people"></i>
+            </div>
+            <h5 class="fw-bold">Пользователи</h5>
+            <p class="text-muted mb-3">Управление пользователями системы</p>
+            <a href="{% url 'user_list' %}" class="btn btn-sm btn-primary">
+              <i class="bi bi-gear me-1"></i>Управление
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body text-center">
+            <div class="display-5 mb-3 text-warning">
+              <i class="bi bi-trophy"></i>
+            </div>
+            <h5 class="fw-bold">Соревнования</h5>
+            <p class="text-muted mb-3">Управление всеми соревнованиями</p>
+            <a href="/admin/olympiad/olympiad/" class="btn btn-sm btn-primary">
+              <i class="bi bi-gear me-1"></i>Управление
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body text-center">
+            <div class="display-5 mb-3 text-success">
+              <i class="bi bi-file-earmark-check"></i>
+            </div>
+            <h5 class="fw-bold">Задания</h5>
+            <p class="text-muted mb-3">Управление заданиями и решениями</p>
+            <a href="/admin/olympiad/problem/" class="btn btn-sm btn-primary">
+              <i class="bi bi-gear me-1"></i>Управление
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

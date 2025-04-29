@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
+    <li class="breadcrumb-item active">Управление пользователями</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">
+    <i class="bi bi-people me-2 text-primary"></i>Управление пользователями
+  </h2>
+  
+  <a href="{% url 'user_create' %}" class="btn btn-success">
+    <i class="bi bi-person-plus me-1"></i>Добавить пользователя
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <div class="row g-3 mb-4">
+      <div class="col-md-8">
+        <form method="get" action="{% url 'user_list' %}">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Поиск по имени или email" 
+                  name="q" value="{{ q }}">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-search me-1"></i>Найти
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" onchange="if(this.value) window.location.href=this.value;">
+          <option value="{% url 'user_list' %}" {% if not role_filter %}selected{% endif %}>Все роли</option>
+          {% for role_code, role_label in role_choices %}
+            <option value="{% url 'user_list' %}?role={{ role_code }}" {% if role_filter == role_code %}selected{% endif %}>
+              {{ role_label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Имя пользователя</th>
+            <th>Email</th>
+            <th>Роль</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" 
+                      style="width: 36px; height: 36px;">
+                    <i class="bi bi-person"></i>
+                  </div>
+                  <span class="fw-medium">{{ user.username }}</span>
+                </div>
+              </td>
+              <td>{{ user.email|default:"-" }}</td>
+              <td>
+                {% if user.profile.is_student %}
+                  <span class="badge bg-info rounded-pill">Студент</span>
+                {% elif user.profile.is_teacher %}
+                  <span class="badge bg-warning rounded-pill">Преподаватель</span>
+                {% elif user.profile.is_admin %}
+                  <span class="badge bg-danger rounded-pill">Администратор</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.is_active %}
+                  <span class="badge bg-success">Активен</span>
+                {% else %}
+                  <span class="badge bg-secondary">Заблокирован</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'user_edit' user.id %}" class="btn btn-sm btn-outline-primary me-1" title="Редактировать">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-4">
+                <i class="bi bi-info-circle me-2"></i>Пользователи не найдены
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if is_paginated %}
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+              <i class="bi bi-chevron-double-left"></i>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+                {{ num }}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}">
+              <i class="bi bi-chevron-double-right"></i>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %} 

@@ -1,5 +1,166 @@
 /* static/css/style.css */
-body            { font-family: 'Inter', sans-serif; }
-.navbar-brand    { letter-spacing: .5px; }
-.card            { border-radius: 1rem; }
-.btn-primary     { --bs-btn-bg:#0066ff; --bs-btn-border-color:#0066ff; }
+:root {
+  --primary: #0066ff;
+  --secondary: #53b1fd;
+  --accent: #ff6b00;
+  --success: #12b76a;
+  --dark: #101828;
+  --light-bg: #f8f9fc;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--light-bg);
+  color: #344054;
+}
+
+/* Навигация */
+.navbar-brand {
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.navbar-dark {
+  background: var(--dark) !important;
+}
+
+/* Карточки */
+.card {
+  border-radius: 1rem;
+  border: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--card-shadow);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Кнопки */
+.btn-primary {
+  --bs-btn-bg: var(--primary);
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-hover-bg: #0052cc;
+  --bs-btn-hover-border-color: #0052cc;
+  --bs-btn-active-bg: #0047b3;
+  --bs-btn-active-border-color: #0047b3;
+  font-weight: 500;
+  border-radius: 0.5rem;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--primary);
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-hover-bg: var(--primary);
+  --bs-btn-hover-border-color: var(--primary);
+  font-weight: 500;
+  border-radius: 0.5rem;
+}
+
+/* Бейджи */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  border-radius: 0.5rem;
+}
+
+.badge.bg-secondary {
+  background-color: var(--secondary) !important;
+}
+
+/* Вкладки */
+.nav-pills .nav-link {
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #344054;
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--primary);
+}
+
+/* Заголовки */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--dark);
+}
+
+/* Статусы соревнований */
+.olympiad-status {
+  padding: 0.35em 0.75em;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  display: inline-block;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #ecfdf3;
+  color: var(--success);
+}
+
+.status-upcoming {
+  background-color: #eff8ff;
+  color: var(--primary);
+}
+
+.status-finished {
+  background-color: #f9fafb;
+  color: #667085;
+}
+
+/* Таблица результатов */
+.scoreboard-table {
+  box-shadow: var(--card-shadow);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.scoreboard-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+/* Анимации */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.highlight-item {
+  animation: pulse 2s infinite;
+}
+
+/* Статистика и цифры */
+.stat-card {
+  padding: 1.5rem;
+  text-align: center;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: var(--card-shadow);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: #667085;
+  font-weight: 500;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .stat-card {
+    margin-bottom: 1rem;
+  }
+}

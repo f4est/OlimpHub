@@ -1,0 +1,589 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <span style="font-size: 26px; margin-right: 5px; color: #ffc107;">
+            <i class="fas fa-trophy"></i>
+        </span>
+        OlimpHub <span class="admin-subtitle">Администратор</span>
+    </a>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    :root {
+        /* Основные цвета */
+        --primary: #4a5af8;
+        --primary-hover: #3a4794;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        
+        /* Цвета фона */
+        --body-bg: #f5f7fa;
+        --card-bg: #ffffff;
+        --light: #f8f9fa;
+        --dark: #212529;
+        
+        /* Цвета текста - улучшена контрастность */
+        --text-primary: #212529;
+        --text-secondary: #495057;
+        --text-light: #ffffff;
+        --text-muted: #6c757d;
+        
+        /* Цвета ссылок */
+        --link-color: #0a58ca;
+        --link-hover: #0a48ad;
+        
+        /* Элементы интерфейса */
+        --border-radius: 0.5rem;
+        --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        --border-color: #e9ecef;
+        --input-border: #ced4da;
+    }
+
+    /* Тёмная тема - добавлены переменные для поддержки автоматического переключения */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            /* Цвета фона для тёмной темы - глубокие оттенки для комфортного восприятия */
+            --body-bg: #121418;
+            --card-bg: #1e2024;
+            --light: #252830;
+            --dark: #0f1012;
+            
+            /* Цвета текста для тёмной темы - улучшенная контрастность */
+            --text-primary: #e9ecef;
+            --text-secondary: #ced4da;
+            --text-light: #ffffff;
+            --text-muted: #adb5bd;
+            
+            /* Цвета ссылок для тёмной темы - яркие и заметные */
+            --link-color: #75a5ff;
+            --link-hover: #94b8ff;
+            
+            /* Элементы интерфейса для тёмной темы */
+            --border-color: #2c3038;
+            --input-border: #2c3038;
+            --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+            
+            /* Цветовые акценты для информационных сообщений */
+            --success-bg: rgba(40, 167, 69, 0.2);
+            --success-border: rgba(40, 167, 69, 0.4);
+            --success-text: #5bcc81;
+            
+            --warning-bg: rgba(255, 193, 7, 0.2);
+            --warning-border: rgba(255, 193, 7, 0.4);
+            --warning-text: #ffda79;
+            
+            --error-bg: rgba(220, 53, 69, 0.2);
+            --error-border: rgba(220, 53, 69, 0.4);
+            --error-text: #f27d89;
+        }
+    }
+
+    body {
+        background-color: var(--body-bg);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Header */
+    #header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        color: var(--text-light);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #branding h1 {
+        font-weight: bold;
+    }
+    
+    #branding h1 a {
+        color: var(--text-light);
+    }
+    
+    #branding h1 img {
+        height: 26px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    
+    .admin-subtitle {
+        font-size: 0.75em;
+        opacity: 0.8;
+        margin-left: 5px;
+        font-weight: normal;
+    }
+
+    /* User tools */
+    #user-tools {
+        font-size: 0.85rem;
+    }
+    
+    #user-tools a {
+        border: none;
+        color: rgba(255, 255, 255, 0.9); /* Улучшена контрастность */
+        border-radius: var(--border-radius);
+        padding: 5px 10px;
+        transition: all 0.2s;
+    }
+    
+    #user-tools a:hover {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.2); /* Улучшена контрастность */
+        text-decoration: none;
+    }
+    
+    #user-tools a:last-child {
+        background-color: rgba(220, 53, 69, 0.3); /* Улучшена контрастность */
+        color: white;
+        margin-left: 5px;
+    }
+    
+    #user-tools a:last-child:hover {
+        background-color: rgba(220, 53, 69, 0.4); /* Улучшена контрастность */
+    }
+
+    /* Breadcrumbs */
+    div.breadcrumbs {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 15px 40px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    
+    div.breadcrumbs a {
+        color: var(--link-color);
+    }
+    
+    div.breadcrumbs a:hover {
+        color: var(--link-hover);
+    }
+
+    /* Modules */
+    .module {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 25px;
+        background-color: var(--card-bg);
+        overflow: hidden;
+    }
+    
+    .module h2, .module caption {
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        padding: 12px 15px;
+    }
+
+    /* Content */
+    #content {
+        padding: 25px 40px;
+        background-color: var(--body-bg);
+    }
+    
+    #content-main {
+        margin-top: 20px;
+    }
+    
+    /* Форматирование текста */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-primary);
+    }
+    
+    p, div, span {
+        color: var(--text-secondary);
+    }
+    
+    /* Forms */
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: var(--primary);
+        padding: 10px 15px;
+        border-radius: var(--border-radius);
+        color: var(--text-light);
+        border: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .button:hover, input[type=submit]:hover, input[type=button]:hover, 
+    .submit-row input:hover, a.button:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        color: var(--text-light);
+    }
+    
+    .button.default, input[type=submit].default, .submit-row input.default {
+        background: var(--primary);
+        font-weight: bold;
+        box-shadow: 0 3px 8px rgba(74, 90, 248, 0.2);
+        color: var(--text-light);
+    }
+    
+    .button.default:hover, input[type=submit].default:hover, .submit-row input.default:hover {
+        background: var(--primary-hover);
+        box-shadow: 0 5px 12px rgba(74, 90, 248, 0.3);
+        color: var(--text-light);
+    }
+    
+    /* Links */
+    a:link, a:visited {
+        color: var(--link-color);
+        transition: color 0.2s;
+    }
+    
+    a:hover {
+        color: var(--link-hover);
+    }
+    
+    /* Tables */
+    table {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        margin-bottom: 1rem;
+        width: 100%;
+    }
+    
+    th {
+        font-weight: 600;
+        background: var(--light);
+        color: var(--text-primary);
+        padding: 10px;
+    }
+    
+    thead th {
+        background: var(--light);
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    tr:nth-child(even) {
+        background: var(--light);
+    }
+    
+    tr:hover {
+        background: var(--primary-hover);
+        color: var(--text-light);
+    }
+    
+    tr:hover td, tr:hover a {
+        color: var(--text-light);
+    }
+    
+    td {
+        padding: 10px;
+        vertical-align: middle;
+        color: var(--text-secondary);
+    }
+    
+    /* Fields */
+    .form-row {
+        border-bottom: 1px solid var(--border-color);
+        padding: 15px 0;
+    }
+    
+    fieldset {
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        padding: 20px;
+        margin-bottom: 1.5rem;
+        background-color: var(--card-bg);
+    }
+    
+    .aligned label {
+        color: var(--text-primary);
+        font-weight: 500;
+        padding: 5px 0;
+    }
+    
+    input, textarea, select, .form-row p, form .button {
+        margin: 2px 0;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid var(--input-border);
+        font-size: 14px;
+        color: var(--text-primary);
+        background-color: var(--card-bg);
+    }
+    
+    input:focus, textarea:focus, select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(74, 90, 248, 0.15);
+        outline: none;
+    }
+    
+    /* Messages */
+    ul.messagelist li {
+        padding: 12px 15px;
+        margin: 0 0 15px 0;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+    }
+    
+    ul.messagelist li.success {
+        background: #edf9ef;
+        border: 1px solid #d0ebd7;
+        color: #1e7e34;
+    }
+    
+    ul.messagelist li.warning {
+        background: #fff8e6;
+        border: 1px solid #ffe7bc;
+        color: #b7791f;
+    }
+    
+    ul.messagelist li.error {
+        background: #fdeff0;
+        border: 1px solid #f5c6cb;
+        color: #c82333;
+    }
+    
+    /* Dashboard */
+    .dashboard .module table td a {
+        padding: 12px 10px;
+        display: block;
+        color: var(--link-color);
+    }
+    
+    .dashboard .module table td {
+        white-space: nowrap;
+    }
+    
+    /* Фиксы для заголовков и форм редактирования */
+    .required label, label.required {
+        font-weight: bold;
+        color: var(--text-primary);
+    }
+    
+    .submit-row {
+        margin: 20px 0 0 0;
+        padding: 15px;
+        background: var(--light);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        text-align: right;
+    }
+    
+    .submit-row input[type=submit] {
+        margin-left: 10px;
+    }
+    
+    /* Улучшение для форм */
+    .form-row .field-box {
+        float: left;
+        margin-right: 20px;
+        margin-bottom: 10px;
+    }
+    
+    /* Исправление проблем с текстом, выходящим за границы */
+    .module .results {
+        overflow-x: auto;
+    }
+    
+    /* Аккуратные фильтры */
+    .module.filtered h2 {
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    #changelist-filter {
+        padding: 15px;
+        background: var(--card-bg);
+        border-left: 1px solid var(--border-color);
+    }
+    
+    #changelist-filter h2 {
+        padding: 10px 15px;
+        background: var(--light);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        margin-top: 0;
+        color: var(--text-primary);
+    }
+    
+    #changelist-filter .filter-title {
+        font-weight: 600;
+        margin-top: 15px;
+        color: var(--text-primary);
+    }
+    
+    #changelist-filter li.selected {
+        border-left: 4px solid var(--primary);
+        padding-left: 10px;
+        margin-left: -14px;
+    }
+    
+    #changelist-filter a {
+        display: block;
+        padding: 5px 0;
+        color: var(--link-color);
+    }
+    
+    /* Таблицы редактирования */
+    #changelist table thead th {
+        padding: 10px;
+        background: var(--light);
+        color: var(--text-primary);
+    }
+    
+    #changelist table tbody td {
+        color: var(--text-secondary);
+    }
+    
+    #changelist table tbody tr a {
+        color: var(--link-color);
+    }
+    
+    /* Действия */
+    .actions {
+        background: var(--card-bg);
+        padding: 10px;
+        border-radius: var(--border-radius);
+        margin-bottom: 15px;
+        color: var(--text-primary);
+    }
+    
+    .actions label {
+        color: var(--text-primary);
+    }
+    
+    /* Footer */
+    #footer {
+        padding: 20px 40px;
+        color: var(--text-secondary);
+        text-align: center;
+        font-size: 0.85rem;
+        background-color: var(--card-bg);
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Специальные улучшения для темной темы */
+    @media (prefers-color-scheme: dark) {
+        /* Улучшенные информационные сообщения */
+        ul.messagelist li.success {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+        }
+        
+        ul.messagelist li.warning {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            color: var(--warning-text);
+        }
+        
+        ul.messagelist li.error {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-text);
+        }
+        
+        /* Улучшенный фокус элементов */
+        input:focus, textarea:focus, select:focus {
+            box-shadow: 0 0 0 3px rgba(117, 165, 255, 0.25);
+        }
+        
+        /* Стилизация селектов */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ced4da' d='M6 8.825L1.175 4 0 5.175 6 11.175 12 5.175 10.825 4 6 8.825z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 24px;
+        }
+        
+        select option {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+        
+        /* Улучшенная контрастность для состояния наведения */
+        a:hover {
+            color: var(--link-hover);
+            text-decoration: none;
+        }
+        
+        /* Карточки и модули с эффектом глубины */
+        .module {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Кнопки с улучшенным отображением */
+        .button, input[type=submit], input[type=button], .submit-row input, a.button {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .button:hover, input[type=submit]:hover, input[type=button]:hover, 
+        .submit-row input:hover, a.button:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Стиль для кода и монотекста */
+        code, pre, .monospace {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 2px 4px;
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            color: #e9ecef;
+        }
+        
+        /* Улучшенные отступы для списков */
+        ul, ol {
+            padding-left: 25px;
+        }
+        
+        /* Специальное выделение активного фильтра */
+        #changelist-filter li.selected {
+            border-left-color: var(--link-color);
+            background: rgba(117, 165, 255, 0.1);
+        }
+        
+        /* Улучшенная таблица результатов */
+        tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        tbody tr:hover {
+            background: rgba(117, 165, 255, 0.15);
+        }
+        
+        tbody tr:hover td, tbody tr:hover a {
+            color: var(--text-light);
+        }
+        
+        /* Улучшенный скроллбар */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(117, 165, 255, 0.3);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(117, 165, 255, 0.5);
+        }
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block nav-global %}{% endblock %} 

@@ -1,0 +1,819 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style type="text/css">
+    /* Основной контейнер */
+    #content {
+        padding: 30px 40px;
+        background-color: var(--body-bg);
+    }
+    
+    /* Заголовок панели */
+    .dashboard-title {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e6eaf4;
+        position: relative;
+    }
+    
+    .dashboard-title h1 {
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .dashboard-title p {
+        color: var(--text-secondary);
+        margin-bottom: 0;
+        font-size: 1.05rem;
+        max-width: 600px;
+    }
+    
+    /* Карточки разделов */
+    .app-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        margin-bottom: 3rem;
+    }
+    
+    .app-item {
+        flex: 1 1 calc(33.333% - 25px);
+        min-width: 300px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+    
+    .app-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(74, 90, 248, 0.15);
+    }
+    
+    .app-header {
+        padding: 18px 20px;
+        background: linear-gradient(135deg, #3a4794 0%, #4a5af8 100%);
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        letter-spacing: -0.25px;
+    }
+    
+    .app-content {
+        padding: 20px;
+    }
+    
+    /* Таблица моделей */
+    .model-list {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .model-list tr:not(:last-child) {
+        border-bottom: 1px solid #f0f2f5;
+    }
+    
+    .model-list th {
+        text-align: left;
+        padding: 15px 10px 15px 0;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .model-list td {
+        padding: 15px 10px;
+        text-align: center;
+    }
+    
+    .model-list a {
+        color: var(--link-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+    }
+    
+    .model-list a:hover {
+        color: white;
+        background-color: var(--primary);
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(74, 90, 248, 0.2);
+    }
+    
+    /* Боковая панель с быстрыми ссылками */
+    .quick-links {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        padding: 0;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .quick-links-header {
+        background: linear-gradient(135deg, #3a4794 0%, #4a5af8 100%);
+        color: white;
+        padding: 18px 20px;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .quick-links-content {
+        padding: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .btn-quick-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 20px;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-quick-link:hover {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(74, 90, 248, 0.2);
+    }
+    
+    /* Админ панель пустая */
+    .empty-dashboard {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .empty-dashboard p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Статистика */
+    .stats-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        margin-bottom: 3rem;
+        justify-content: center;
+    }
+    
+    .stat-card {
+        flex: 1 1 calc(25% - 25px);
+        min-width: 200px;
+        max-width: 260px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        padding: 25px;
+        text-align: center;
+        transition: all 0.3s;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(74, 90, 248, 0.15);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.8rem;
+        color: white;
+    }
+    
+    .stat-users { background: linear-gradient(135deg, #4a5af8 0%, #6170ff 100%); }
+    .stat-olympiads { background: linear-gradient(135deg, #ff9d00 0%, #ffb84d 100%); }
+    .stat-problems { background: linear-gradient(135deg, #36b37e 0%, #57d9a3 100%); }
+    .stat-submissions { background: linear-gradient(135deg, #00b8d9 0%, #4dd6e7 100%); }
+    
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    
+    /* Графики */
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        padding: 25px;
+        margin-bottom: 3rem;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .chart-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chart-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .chart-filters {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chart-filter {
+        padding: 6px 12px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .chart-filter.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .chart-content {
+        height: 350px;
+        position: relative;
+    }
+    
+    /* График для количества соревнований по времени */
+    .chart-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+        margin-bottom: 3rem;
+    }
+    
+    .chart-col-6 {
+        flex: 0 0 calc(50% - 12.5px);
+        min-width: 300px;
+    }
+    
+    /* Мелкие улучшения визуала и исправления проблем */
+    @media (max-width: 768px) {
+        .chart-col-6 {
+            flex: 0 0 100%;
+        }
+        
+        .stats-container {
+            justify-content: center;
+        }
+        
+        .stat-card {
+            min-width: 180px;
+        }
+    }
+    
+    /* Новые стили для цветового разнообразия */
+    .app-header-users {
+        background: linear-gradient(135deg, #4a5af8 0%, #6170ff 100%);
+    }
+    
+    .app-header-olympiads {
+        background: linear-gradient(135deg, #ff9d00 0%, #ffb84d 100%);
+    }
+    
+    .app-header-problems {
+        background: linear-gradient(135deg, #36b37e 0%, #57d9a3 100%);
+    }
+    
+    .app-header-submissions {
+        background: linear-gradient(135deg, #00b8d9 0%, #4dd6e7 100%);
+    }
+    
+    /* Улучшенная контрастность для чтения */
+    .empty-dashboard h3 {
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+    
+    /* Лучшая читаемость текста в графиках */
+    .chart-container canvas {
+        color: var(--text-primary);
+    }
+    
+    /* Специальные улучшения для темной темы */
+    @media (prefers-color-scheme: dark) {
+        /* Обновление карточек и контейнеров */
+        .app-item, .quick-links, .empty-dashboard, .stat-card, .chart-container {
+            background: var(--card-bg);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Обновление границ */
+        .dashboard-title {
+            border-bottom-color: var(--border-color);
+        }
+        
+        .model-list tr:not(:last-child) {
+            border-bottom-color: var(--border-color);
+        }
+        
+        /* Улучшение эффектов при наведении */
+        .app-item:hover, .stat-card:hover {
+            box-shadow: 0 8px 25px rgba(74, 90, 248, 0.25);
+            transform: translateY(-5px);
+        }
+        
+        /* Улучшение контрастности кнопок */
+        .btn-quick-link {
+            background-color: var(--light);
+            border-color: var(--border-color);
+        }
+        
+        .btn-quick-link:hover {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* Улучшенные карточки статистики */
+        .stat-value {
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+        }
+        
+        /* Фильтры графиков */
+        .chart-filter {
+            background: var(--light);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .chart-filter.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* Улучшенные стили для графиков Chart.js */
+        .chart-content canvas {
+            filter: brightness(0.9) contrast(1.1);
+        }
+        
+        /* Улучшенная видимость текста заголовков */
+        .chart-title {
+            color: var(--text-primary);
+        }
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-title">
+    <h1>Панель управления OlimpHub</h1>
+    <p>Здесь вы можете управлять всеми аспектами образовательной платформы: пользователями, соревнованиями, заданиями и настройками системы</p>
+</div>
+
+<!-- Статистика платформы -->
+<div class="stats-container">
+    <div class="stat-card">
+        <div class="stat-icon stat-users">👤</div>
+        <div class="stat-value">{{ users_count|default:"0" }}</div>
+        <div class="stat-label">Пользователей</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon stat-olympiads">🏆</div>
+        <div class="stat-value">{{ olympiads_count|default:"0" }}</div>
+        <div class="stat-label">Соревнований</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon stat-problems">✓</div>
+        <div class="stat-value">{{ problems_count|default:"0" }}</div>
+        <div class="stat-label">Заданий</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon stat-submissions">📝</div>
+        <div class="stat-value">{{ submissions_count|default:"0" }}</div>
+        <div class="stat-label">Решений</div>
+    </div>
+</div>
+
+<!-- Графики -->
+<div class="chart-row">
+    <div class="chart-col-6">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">Активность пользователей</h3>
+                <div class="chart-filters">
+                    <div class="chart-filter active" onclick="updateUsersChart('week')">Неделя</div>
+                    <div class="chart-filter" onclick="updateUsersChart('month')">Месяц</div>
+                    <div class="chart-filter" onclick="updateUsersChart('year')">Год</div>
+                </div>
+            </div>
+            <div class="chart-content">
+                <canvas id="usersChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chart-col-6">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">Соревнования по статусу</h3>
+            </div>
+            <div class="chart-content">
+                <canvas id="olympiadsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chart-container">
+    <div class="chart-header">
+        <h3 class="chart-title">Решения задач по дням</h3>
+        <div class="chart-filters">
+            <div class="chart-filter active" onclick="updateSubmissionsChart('week')">Неделя</div>
+            <div class="chart-filter" onclick="updateSubmissionsChart('month')">Месяц</div>
+        </div>
+    </div>
+    <div class="chart-content">
+        <canvas id="submissionsChart"></canvas>
+    </div>
+</div>
+
+{% if app_list %}
+<div class="app-list">
+    {% for app in app_list %}
+    <div class="app-item">
+        <div class="app-header {% if 'auth' in app.app_label %}app-header-users{% elif 'olympiad' in app.app_label %}app-header-olympiads{% elif 'problem' in app.app_label %}app-header-problems{% elif 'submission' in app.app_label %}app-header-submissions{% endif %}">
+            {{ app.name }}
+        </div>
+        <div class="app-content">
+            <table class="model-list">
+                {% for model in app.models %}
+                <tr>
+                    <th scope="row">
+                        {% if model.admin_url %}
+                        <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                        {% else %}
+                        {{ model.name }}
+                        {% endif %}
+                    </th>
+                    <td>
+                        {% if model.add_url %}
+                        <a href="{{ model.add_url }}" title="Добавить">+</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if model.admin_url %}
+                        <a href="{{ model.admin_url }}" title="Изменить">↗</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-dashboard">
+    <p>{% translate "У вас нет разрешений для просмотра или редактирования." %}</p>
+</div>
+{% endif %}
+
+<div class="quick-links">
+    <div class="quick-links-header">
+        Быстрые ссылки
+    </div>
+    <div class="quick-links-content">
+        <a href="{% url 'index' %}" class="btn-quick-link">
+            На главную страницу
+        </a>
+        <a href="{% url 'user_list' %}" class="btn-quick-link">
+            Управление пользователями
+        </a>
+        <a href="{% url 'admin:auth_user_changelist' %}" class="btn-quick-link">
+            Пользователи Django
+        </a>
+        <a href="{% url 'admin:olympiad_olympiad_changelist' %}" class="btn-quick-link">
+            Все соревнования
+        </a>
+    </div>
+</div>
+
+<script>
+    // Переменные для хранения графиков
+    let usersChart, olympiadsChart, submissionsChart;
+    
+    // Функция для загрузки данных с сервера
+    function loadDashboardData() {
+        fetch('/api/dashboard-stats/')
+            .then(response => response.json())
+            .then(data => {
+                // Обновляем графики с полученными данными
+                updateUsersChartWithData(data.users);
+                updateSubmissionsChartWithData(data.submissions);
+                updateOlympiadsChartWithData(data.olympiads);
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке данных:', error);
+            });
+    }
+    
+    // Функции для обновления графиков с реальными данными
+    function updateUsersChartWithData(usersData) {
+        const labels = usersData.map(item => item.day);
+        const data = usersData.map(item => item.count);
+        
+        usersChart.data.labels = labels;
+        usersChart.data.datasets[0].data = data;
+        usersChart.update();
+    }
+    
+    function updateSubmissionsChartWithData(submissionsData) {
+        const labels = submissionsData.map(item => item.day);
+        const data = submissionsData.map(item => item.count);
+        
+        submissionsChart.data.labels = labels;
+        submissionsChart.data.datasets[0].data = data;
+        submissionsChart.update();
+    }
+    
+    function updateOlympiadsChartWithData(olympiadsData) {
+        olympiadsChart.data.datasets[0].data = [
+            olympiadsData.active,
+            olympiadsData.upcoming,
+            olympiadsData.closed
+        ];
+        olympiadsChart.update();
+    }
+    
+    // Данные для графиков (будут использоваться до загрузки реальных данных)
+    const userData = {
+        week: {
+            labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+            data: [5, 12, 8, 16, 10, 4, 7]
+        },
+        month: {
+            labels: ['1-я', '2-я', '3-я', '4-я'],
+            data: [45, 65, 52, 48]
+        },
+        year: {
+            labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+            data: [120, 145, 150, 180, 220, 190, 210, 230, 200, 250, 260, 270]
+        }
+    };
+    
+    const submissionsData = {
+        week: {
+            labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+            data: [15, 25, 18, 30, 20, 12, 8]
+        },
+        month: {
+            labels: Array.from({length: 30}, (_, i) => i + 1),
+            data: Array.from({length: 30}, () => Math.floor(Math.random() * 20) + 5)
+        }
+    };
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Определяем, используется ли темная тема
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const isDarkMode = prefersDarkScheme.matches;
+        
+        // Адаптивные цвета для графиков
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+        
+        // График активности пользователей
+        const usersCtx = document.getElementById('usersChart').getContext('2d');
+        usersChart = new Chart(usersCtx, {
+            type: 'line',
+            data: {
+                labels: userData.week.labels,
+                datasets: [{
+                    label: 'Новых пользователей',
+                    data: userData.week.data,
+                    backgroundColor: 'rgba(74, 90, 248, 0.2)',
+                    borderColor: 'rgba(74, 90, 248, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+                }
+            }
+        });
+        
+        // График соревнований по статусу
+        const olympiadsCtx = document.getElementById('olympiadsChart').getContext('2d');
+        olympiadsChart = new Chart(olympiadsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Активные', 'Предстоящие', 'Завершенные'],
+                datasets: [{
+                    data: [{{ active_olympiads|default:"0" }}, {{ upcoming_olympiads|default:"0" }}, {{ closed_olympiads|default:"0" }}],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(108, 117, 125, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                weight: 500
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+        
+        // График решений задач
+        const submissionsCtx = document.getElementById('submissionsChart').getContext('2d');
+        submissionsChart = new Chart(submissionsCtx, {
+            type: 'bar',
+            data: {
+                labels: submissionsData.week.labels,
+                datasets: [{
+                    label: 'Отправленные решения',
+                    data: submissionsData.week.data,
+                    backgroundColor: 'rgba(0, 184, 217, 0.7)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Загружаем реальные данные
+        loadDashboardData();
+        
+        // Обновляем данные каждые 5 минут
+        setInterval(loadDashboardData, 5 * 60 * 1000);
+        
+        // Слушаем изменения в предпочтениях темы
+        prefersDarkScheme.addEventListener('change', (e) => {
+            const newIsDarkMode = e.matches;
+            const newGridColor = newIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const newTextColor = newIsDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+            
+            // Обновляем цвета на всех графиках
+            [usersChart, submissionsChart].forEach(chart => {
+                chart.options.scales.y.ticks.color = newTextColor;
+                chart.options.scales.y.grid.color = newGridColor;
+                chart.options.scales.x.ticks.color = newTextColor;
+                chart.options.scales.x.grid.color = newGridColor;
+                chart.update();
+            });
+            
+            // Обновляем цвета легенды в круговой диаграмме
+            olympiadsChart.options.plugins.legend.labels.color = newTextColor;
+            olympiadsChart.update();
+        });
+    });
+    
+    // Функции для обновления графиков при клике на фильтры
+    function updateUsersChart(period) {
+        // Обновляем активный фильтр
+        document.querySelectorAll('#usersChart').forEach(chart => {
+            chart.closest('.chart-container').querySelectorAll('.chart-filter').forEach(filter => {
+                filter.classList.remove('active');
+            });
+        });
+        document.querySelectorAll('#usersChart').forEach(chart => {
+            chart.closest('.chart-container').querySelector(`.chart-filter[onclick*="${period}"]`).classList.add('active');
+        });
+        
+        // Обновляем данные графика
+        usersChart.data.labels = userData[period].labels;
+        usersChart.data.datasets[0].data = userData[period].data;
+        usersChart.update();
+    }
+    
+    function updateSubmissionsChart(period) {
+        // Обновляем активный фильтр
+        document.querySelectorAll('#submissionsChart').forEach(chart => {
+            chart.closest('.chart-container').querySelectorAll('.chart-filter').forEach(filter => {
+                filter.classList.remove('active');
+            });
+        });
+        document.querySelectorAll('#submissionsChart').forEach(chart => {
+            chart.closest('.chart-container').querySelector(`.chart-filter[onclick*="${period}"]`).classList.add('active');
+        });
+        
+        // Обновляем данные графика
+        submissionsChart.data.labels = submissionsData[period].labels;
+        submissionsChart.data.datasets[0].data = submissionsData[period].data;
+        submissionsChart.update();
+    }
+</script>
+{% endblock %} 

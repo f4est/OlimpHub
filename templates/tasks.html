@@ -1,20 +1,207 @@
 {% extends 'base.html' %}
 {% block content %}
-<h3 class="mb-3">Tasks for {{ olymp.title }}</h3>
-{% for p in problems %}
-<div class="card mb-3">
-  <div class="card-body">
-    <h5 class="card-title">{{ p.title }} ({{ p.max_score }} pts)</h5>
-    <a href="{{ p.statement_file.url }}" class="btn btn-outline-secondary btn-sm" target="_blank">View statement</a>
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' olymp.pk %}" class="text-decoration-none">{{ olymp.title }}</a></li>
+    <li class="breadcrumb-item active">Задания</li>
+  </ol>
+</nav>
 
-    <form action="{% url 'submit' p.id %}" method="post" enctype="multipart/form-data" class="mt-2">
-        {% csrf_token %}
-        <input type="file" name="file" required>
-        <button type="submit" class="btn btn-primary btn-sm">Submit</button>
-    </form>
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="fw-bold mb-1">{{ olymp.title }}: Задания</h2>
+        <div class="text-muted">{{ olymp.subject }}</div>
+      </div>
+      
+      <a href="{% url 'scoreboard' pk=olymp.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-trophy me-1"></i>Результаты
+      </a>
+    </div>
+    
+    <div class="alert 
+      {% if olymp.status == 'active' %}alert-success
+      {% elif olymp.status == 'upcoming' %}alert-warning
+      {% else %}alert-secondary{% endif %}">
+      <div class="d-flex">
+        <div class="me-3 fs-3">
+          {% if olymp.status == 'active' %}
+            <i class="bi bi-play-circle"></i>
+          {% elif olymp.status == 'upcoming' %}
+            <i class="bi bi-hourglass"></i>
+          {% else %}
+            <i class="bi bi-flag-fill"></i>
+          {% endif %}
+        </div>
+        <div>
+          <h5 class="alert-heading">
+            {% if olymp.status == 'active' %}
+              Соревнование активно
+            {% elif olymp.status == 'upcoming' %}
+              Соревнование еще не началось
+            {% else %}
+              Соревнование завершено
+            {% endif %}
+          </h5>
+          <p class="mb-0">
+            {% if olymp.status == 'active' %}
+              Вы можете решать задания и отправлять свои решения.
+              Соревнование завершится {{ olymp.end_at|date:"d.m.Y" }} в {{ olymp.end_at|date:"H:i" }}.
+            {% elif olymp.status == 'upcoming' %}
+              Соревнование начнется {{ olymp.start_at|date:"d.m.Y" }} в {{ olymp.start_at|date:"H:i" }}.
+              После начала вы сможете видеть задания и отправлять свои решения.
+            {% else %}
+              Соревнование завершилось {{ olymp.end_at|date:"d.m.Y" }} в {{ olymp.end_at|date:"H:i" }}.
+              Вы больше не можете отправлять решения, но можете просматривать свои результаты.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    {% if problems %}
+    <div class="row mt-4">
+      {% for problem in problems %}
+      <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-semibold">{{ problem.title }}</h5>
+            <span class="badge bg-primary rounded-pill">{{ problem.max_score }} баллов</span>
+          </div>
+          
+          <div class="card-body">
+            {% if problem.description %}
+            <p>{{ problem.description }}</p>
+            {% endif %}
+            
+            <div class="d-flex flex-wrap mt-3 gap-2">
+              {% if problem.statement_file %}
+              <a href="{{ problem.statement_file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                <i class="bi bi-file-earmark me-1"></i>{{ problem.filename }}
+              </a>
+              {% endif %}
+              
+              {% if olymp.status == 'active' %}
+              <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#submitModal{{ problem.id }}">
+                <i class="bi bi-upload me-1"></i>Отправить решение
+              </button>
+              {% endif %}
+            </div>
+            
+            {% if problem.submissions %}
+            <div class="mt-4">
+              <h6 class="fw-semibold">Ваши отправки</h6>
+              <div class="table-responsive mt-2">
+                <table class="table table-sm">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Дата</th>
+                      <th>Файл</th>
+                      <th>Статус</th>
+                      <th>Баллы</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for sub in problem.submissions %}
+                    <tr>
+                      <td>{{ sub.submitted_at|date:"d.m.Y H:i" }}</td>
+                      <td>
+                        <a href="{{ sub.file.url }}" class="text-decoration-none">
+                          <i class="bi bi-file-earmark-text me-1"></i>
+                          {% if sub.file.name %}
+                            {{ sub.file.name|slice:"11:" }}
+                          {% else %}
+                            Файл
+                          {% endif %}
+                        </a>
+                      </td>
+                      <td>
+                        {% if sub.status == 'pending' %}
+                          <span class="badge bg-warning">На проверке</span>
+                        {% elif sub.status == 'reviewed' %}
+                          <span class="badge bg-success">Проверено</span>
+                        {% else %}
+                          <span class="badge bg-secondary">{{ sub.status }}</span>
+                        {% endif %}
+                      </td>
+                      <td>{{ sub.score|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          
+          {% if problem.submission_status %}
+          <div class="card-footer 
+            {% if problem.submission_status == 'reviewed' %}bg-success bg-opacity-10
+            {% elif problem.submission_status == 'pending' %}bg-warning bg-opacity-10
+            {% else %}bg-light{% endif %}">
+            <div class="d-flex align-items-center">
+              <div class="me-2">
+                {% if problem.submission_status == 'reviewed' %}
+                  <i class="bi bi-check-circle text-success"></i>
+                {% elif problem.submission_status == 'pending' %}
+                  <i class="bi bi-hourglass-split text-warning"></i>
+                {% else %}
+                  <i class="bi bi-info-circle text-secondary"></i>
+                {% endif %}
+              </div>
+              <div>
+                {% if problem.submission_status == 'reviewed' %}
+                  Решение проверено
+                {% elif problem.submission_status == 'pending' %}
+                  Решение на проверке
+                {% else %}
+                  {{ problem.submission_status }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        
+        <!-- Modal for submission -->
+        <div class="modal fade" id="submitModal{{ problem.id }}" tabindex="-1" aria-labelledby="submitModalLabel{{ problem.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="submitModalLabel{{ problem.id }}">Отправка решения: {{ problem.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form action="{% url 'submit' problem_id=problem.id %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="file{{ problem.id }}" class="form-label">Выберите файл с решением</label>
+                    <input type="file" class="form-control" id="file{{ problem.id }}" name="file" required>
+                    <div class="form-text">Максимальный размер файла: 10MB</div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                  <button type="submit" class="btn btn-success">Отправить</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <div class="display-1 text-muted mb-3">
+        <i class="bi bi-exclamation-circle"></i>
+      </div>
+      <h3>Задания пока не добавлены</h3>
+      <p class="text-muted">Организатор еще не добавил задания для этого соревнования.</p>
+    </div>
+    {% endif %}
   </div>
 </div>
-{% endfor %}
-
-<a href="{% url 'scoreboard' olymp.pk %}" class="btn btn-secondary">Scoreboard</a>
 {% endblock %}
