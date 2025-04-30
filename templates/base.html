@@ -153,5 +153,33 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Скрипт для автоматического обновления статусов соревнований -->
+<script>
+  // Функция для вызова API обновления статусов
+  function updateOlympiadStatuses() {
+    fetch('{% url "auto_update_statuses" %}')
+      .then(response => response.json())
+      .then(data => {
+        if (data.updated_count > 0) {
+          console.log(`[${data.timestamp}] Обновлены статусы ${data.updated_count} соревнований`);
+          // Если есть изменения, перезагрузим страницу
+          location.reload();
+        } else {
+          console.log(`[${data.timestamp}] Статусы актуальны, обновление не требуется`);
+        }
+      })
+      .catch(error => console.error('Ошибка при обновлении статусов:', error));
+  }
+
+  // Запускаем обновление каждые 3 минуты (180000 мс)
+  setInterval(updateOlympiadStatuses, 180000);
+  
+  // Также запустим один раз после загрузки страницы
+  document.addEventListener('DOMContentLoaded', function() {
+    // Запускаем с небольшой задержкой после загрузки страницы
+    setTimeout(updateOlympiadStatuses, 5000);
+  });
+</script>
 </body>
 </html>

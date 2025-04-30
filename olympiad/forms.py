@@ -3,8 +3,20 @@ from django.contrib.auth.models import User
 from .models import UserProfile, Olympiad, Problem
 
 class SignUpForm(forms.ModelForm):
-    password1 = forms.CharField(label='Пароль', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput)
+    password1 = forms.CharField(
+        label='Пароль', 
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Введите пароль',
+        })
+    )
+    password2 = forms.CharField(
+        label='Подтверждение пароля', 
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Повторите пароль',
+        })
+    )
 
     class Meta:
         model = User
@@ -14,6 +26,24 @@ class SignUpForm(forms.ModelForm):
             'email': 'Email',
             'first_name': 'Имя',
             'last_name': 'Фамилия',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите имя пользователя',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите email',
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите имя',
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите фамилию',
+            }),
         }
 
     def clean(self):

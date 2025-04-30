@@ -32,6 +32,9 @@ urlpatterns = [
     # Административная панель с графиками и статистикой
     path('admin-dashboard/', views.AdminDashboardView.as_view(), name='admin_stats_dashboard'),
     path('api/dashboard-stats/', views.get_dashboard_stats, name='dashboard_stats_api'),
+    
+    # API для автоматического обновления статусов
+    path('api/auto-update-statuses/', views.auto_update_olympiad_statuses, name='auto_update_statuses'),
 ]
 
 # Добавление настроек медиа-файлов для режима разработки

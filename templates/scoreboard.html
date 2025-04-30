@@ -35,8 +35,8 @@
               <th class="text-center">Всего</th>
             </tr>
           </thead>
-          <tbody>
-            {% for r in results %}
+  <tbody>
+  {% for r in results %}
               <tr {% if r.user == request.user.username %}class="table-primary"{% endif %}>
                 <td class="text-center fw-semibold">
                   {% if forloop.counter <= 3 %}
@@ -65,9 +65,9 @@
                 
                 <td class="text-center fw-semibold">{{ r.total }}</td>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  {% endfor %}
+  </tbody>
+</table>
       </div>
     {% else %}
       <div class="alert alert-info">

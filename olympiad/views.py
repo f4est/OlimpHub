@@ -165,6 +165,20 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, "Профиль успешно обновлен!")
         return super().form_valid(form)
+        
+    def post(self, request, *args, **kwargs):
+        """Переопределяем post для правильной обработки файлов"""
+        self.object = self.get_object()
+        form = self.get_form()
+        
+        if form.is_valid():
+            # Для правильной обработки аватарки
+            if 'avatar' in request.FILES:
+                form.instance.avatar = request.FILES['avatar']
+                
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 # ────────────────────── список олимпиад ──────────────────────
@@ -223,9 +237,10 @@ class OlympiadListView(ListView):
             queryset = queryset.filter(start_at__gt=now)
         elif status == 'closed':
             queryset = queryset.filter(end_at__lt=now)
-        # В режиме "all" тоже показываем только активные соревнования по умолчанию
-        elif status == 'all':
-            queryset = queryset.filter(start_at__lte=now, end_at__gte=now)
+        # В режиме "all" показываем все соревнования, без фильтрации по статусу
+        # Удаляем фильтрацию, которая есть сейчас
+        # elif status == 'all':
+        #     queryset = queryset.filter(start_at__lte=now, end_at__gte=now)
         
         # Поиск по тексту
         if q:
@@ -837,3 +852,20 @@ class AdminDashboardView(TemplateView):
         # (в реальном приложении вы бы привели данные к формату, подходящему для графиков)
         
         return context
+
+def auto_update_olympiad_statuses(request):
+    """API для автоматического обновления статусов соревнований через AJAX"""
+    olympiads = Olympiad.objects.all()
+    updated_count = 0
+    
+    for olympiad in olympiads:
+        old_status = olympiad.status
+        new_status = olympiad.update_status()
+        if old_status != new_status:
+            updated_count += 1
+    
+    return JsonResponse({
+        'success': True,
+        'updated_count': updated_count,
+        'timestamp': timezone.now().strftime('%H:%M:%S')
+    })
