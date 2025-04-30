@@ -14,6 +14,8 @@ from django.utils import timezone
 from django.contrib.admin.views.decorators import staff_member_required
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied
+import os
+from django.conf import settings
 
 from .models import Olympiad, Enrollment, Problem, UserProfile
 from .forms import SignUpForm, UserProfileForm, OlympiadForm, ProblemForm
@@ -163,21 +165,65 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user.profile
     
     def form_valid(self, form):
+        # Убедимся, что директории для загрузки существуют
+        avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+        if not os.path.exists(avatar_dir):
+            os.makedirs(avatar_dir, exist_ok=True)
+        
+        # Логирование для отладки
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"FILES: {self.request.FILES}")
+        
+        # Обработка аватарки
+        if 'avatar' in self.request.FILES:
+            logger.info(f"Avatar found in request.FILES: {self.request.FILES['avatar']}")
+            
+            # Получаем файл аватарки
+            avatar_file = self.request.FILES['avatar']
+            
+            # Удаляем старую аватарку, если она есть
+            old_avatar = self.get_object().avatar
+            if old_avatar:
+                try:
+                    old_path = old_avatar.path
+                    logger.info(f"Old avatar path: {old_path}")
+                    if os.path.isfile(old_path):
+                        os.remove(old_path)
+                        logger.info(f"Old avatar removed: {old_path}")
+                except (ValueError, OSError) as e:
+                    logger.error(f"Error removing old avatar: {str(e)}")
+                    pass  # Игнорируем ошибки, если файл не существует
+            
+            # Генерируем уникальное имя файла
+            import time
+            import uuid
+            file_name, file_ext = os.path.splitext(avatar_file.name)
+            unique_filename = f"avatar_{uuid.uuid4().hex}_{int(time.time())}{file_ext}"
+            
+            # Назначаем новое имя файла
+            avatar_file.name = unique_filename
+            logger.info(f"New avatar name: {avatar_file.name}")
+            
+            # Сохраняем новую аватарку
+            form.instance.avatar = avatar_file
+        
         messages.success(self.request, "Профиль успешно обновлен!")
         return super().form_valid(form)
         
     def post(self, request, *args, **kwargs):
         """Переопределяем post для правильной обработки файлов"""
         self.object = self.get_object()
-        form = self.get_form()
+        form_class = self.get_form_class()
+        form = form_class(request.POST, request.FILES, instance=self.object)
         
         if form.is_valid():
-            # Для правильной обработки аватарки
-            if 'avatar' in request.FILES:
-                form.instance.avatar = request.FILES['avatar']
-                
             return self.form_valid(form)
         else:
+            # Вывод ошибок для отладки
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(self.request, f"Ошибка в поле {field}: {error}")
             return self.form_invalid(form)
 
 
@@ -388,14 +434,29 @@ class OlympiadDetailView(DetailView):
             return redirect('login')
             
         olymp = self.get_object()
+        olymp.update_status()  # Обновляем статус перед обработкой регистрации
         
         # Проверяем, является ли пользователь студентом
         if not hasattr(request.user, 'profile') or not request.user.profile.is_student:
             messages.error(request, "Только студенты могут регистрироваться на соревнования.")
             return redirect('olymp_detail', pk=olymp.pk)
         
-        Enrollment.objects.get_or_create(user=request.user, olympiad=olymp)
-        messages.success(request, f"Вы успешно зарегистрировались на соревнование '{olymp.title}'!")
+        # Проверяем статус соревнования - запрещаем регистрацию на завершенные
+        if olymp.status == 'closed':
+            messages.error(request, "Регистрация на завершенное соревнование невозможна.")
+            return redirect('olymp_detail', pk=olymp.pk)
+        
+        # Создаем запись о регистрации
+        enrollment, created = Enrollment.objects.get_or_create(
+            user=request.user, 
+            olympiad=olymp
+        )
+        
+        if created:
+            messages.success(request, f"Вы успешно зарегистрировались на соревнование '{olymp.title}'!")
+        else:
+            messages.info(request, f"Вы уже зарегистрированы на соревнование '{olymp.title}'.")
+            
         return redirect('tasks', pk=olymp.pk)
 
 
@@ -415,26 +476,47 @@ class TasksView(LoginRequiredMixin, View):
         except Enrollment.DoesNotExist:
             enrollment = None
             is_enrolled = False
+            
+            # Если пользователь не зарегистрирован и не является преподавателем или админом,
+            # перенаправляем его на страницу соревнования
+            if not (request.user.profile.is_teacher or request.user.profile.is_admin or olymp.creator == request.user):
+                messages.warning(request, "Вы не зарегистрированы на это соревнование. Пожалуйста, зарегистрируйтесь сначала.")
+                return redirect('olymp_detail', pk=olymp.pk)
         
-        # Получение решений для каждой задачи
-        problem_data = []
-        for prob in problems:
-            submissions = []
+        # Обогащаем задачи информацией о решениях пользователя
+        problems_with_submissions = []
+        for problem in problems:
+            problem_with_submissions = {
+                'id': problem.id,
+                'title': problem.title,
+                'description': problem.description,
+                'max_score': problem.max_score,
+                'statement_file': problem.statement_file,
+                'filename': problem.filename if hasattr(problem, 'filename') else None,
+                'submissions': []
+            }
+            
+            # Добавляем решения, если пользователь зарегистрирован
             if enrollment:
                 submissions = Submission.objects.filter(
                     enrollment=enrollment,
-                    problem=prob
-                ).order_by('-submitted_at')  # Изменено с created_at на submitted_at
+                    problem=problem
+                ).order_by('-submitted_at')
+                
+                problem_with_submissions['submissions'] = submissions
+                
+                # Добавляем статус последнего решения
+                if submissions.exists():
+                    latest_submission = submissions.first()
+                    problem_with_submissions['submission_status'] = latest_submission.status
             
-            problem_data.append({
-                'problem': prob,
-                'submissions': submissions,
-                'best_submission': submissions.first() if submissions else None
-            })
+            problems_with_submissions.append(problem_with_submissions)
         
         context = {
             'olympiad': olymp,
-            'problem_data': problem_data,
+            'olymp': olymp,  # Добавляем olymp для совместимости с шаблоном
+            'problem_data': problems_with_submissions,
+            'problems': problems_with_submissions,  # Список задач для итерации в шаблоне
             'is_enrolled': is_enrolled,
             'is_teacher': hasattr(request.user, 'profile') and request.user.profile.is_teacher,
             'is_admin': hasattr(request.user, 'profile') and request.user.profile.is_admin,
@@ -450,24 +532,61 @@ def submit_solution(request, problem_id):
     problem = get_object_or_404(Problem, pk=problem_id)
     
     # Проверяем, активно ли соревнование
+    problem.olympiad.update_status()  # Обновляем статус перед проверкой
     if problem.olympiad.status != Olympiad.ACTIVE:
         messages.error(request, "Невозможно отправить решение: соревнование не активно.")
         return redirect('tasks', pk=problem.olympiad.pk)
     
+    # Создаем директорию для решений, если она отсутствует
+    solutions_dir = os.path.join(settings.MEDIA_ROOT, 'solutions')
+    if not os.path.exists(solutions_dir):
+        os.makedirs(solutions_dir, exist_ok=True)
+    
+    # Проверяем наличие файла в запросе
+    if 'file' not in request.FILES:
+        messages.error(request, "Файл не был отправлен. Пожалуйста, выберите файл.")
+        return redirect('tasks', pk=problem.olympiad.pk)
+    
     form = SubmissionForm(request.POST, request.FILES)
-    if form.is_valid():
-        enrollment, _ = Enrollment.objects.get_or_create(
-            user=request.user, olympiad=problem.olympiad
-        )
-        submission = Submission.objects.create(
-            enrollment=enrollment,
-            problem=problem,
-            file=form.cleaned_data['file'],
-        )
-        messages.success(request, "Решение успешно отправлено на проверку!")
-    else:
-        messages.error(request, "Ошибка при отправке решения. Проверьте формат файла.")
+    
+    try:
+        if form.is_valid():
+            # Получаем или создаем запись о регистрации
+            try:
+                enrollment = Enrollment.objects.get(user=request.user, olympiad=problem.olympiad)
+            except Enrollment.DoesNotExist:
+                # Если пользователь не зарегистрирован, регистрируем его
+                enrollment = Enrollment.objects.create(user=request.user, olympiad=problem.olympiad)
+                messages.info(request, "Вы были автоматически зарегистрированы на соревнование.")
+            
+            # Создаем запись о решении
+            submission = Submission.objects.create(
+                enrollment=enrollment,
+                problem=problem,
+                file=form.cleaned_data['file'],
+            )
+            
+            messages.success(request, "Решение успешно отправлено на проверку!")
+            # Добавляем параметр в URL для обработки в JS
+            return redirect(f"{reverse('tasks', kwargs={'pk': problem.olympiad.pk})}?submission_success=1")
+        else:
+            # Формируем сообщение об ошибке из всех ошибок формы
+            errors = []
+            for field, field_errors in form.errors.items():
+                for error in field_errors:
+                    errors.append(f"{error}")
+            
+            error_message = ". ".join(errors)
+            messages.error(request, f"Ошибка при отправке решения: {error_message}")
+    
+    except Exception as e:
+        # Записываем ошибку в лог и показываем пользователю
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error submitting solution: {str(e)}", exc_info=True)
         
+        messages.error(request, f"Произошла ошибка при отправке решения. Пожалуйста, попробуйте еще раз или обратитесь к администратору.")
+    
     return redirect('tasks', pk=problem.olympiad.pk)
 
 
@@ -869,3 +988,20 @@ def auto_update_olympiad_statuses(request):
         'updated_count': updated_count,
         'timestamp': timezone.now().strftime('%H:%M:%S')
     })
+
+# ────────────────────── статические страницы ──────────────────────
+class AboutView(TemplateView):
+    """Страница 'О нас'"""
+    template_name = 'about.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Статистика для страницы
+        context['olympiads_count'] = Olympiad.objects.count()
+        context['users_count'] = User.objects.count()
+        context['active_olympiads'] = Olympiad.objects.filter(status='active').count()
+        return context
+
+class ContactsView(TemplateView):
+    """Страница 'Контакты'"""
+    template_name = 'contacts.html'

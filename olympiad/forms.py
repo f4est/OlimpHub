@@ -62,7 +62,7 @@ class SignUpForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ('bio', 'role', 'phone', 'organization', 'position', 'avatar', 'additional_info')
+        fields = ('bio', 'phone', 'organization', 'position', 'avatar', 'additional_info')
         labels = {
             'bio': 'О себе',
             'role': 'Роль',

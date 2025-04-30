@@ -3,7 +3,7 @@
 <nav aria-label="breadcrumb" class="mb-4">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' olymp.pk %}" class="text-decoration-none">{{ olymp.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' pk=olymp.pk %}" class="text-decoration-none">{{ olymp.title }}</a></li>
     <li class="breadcrumb-item active">Задания</li>
   </ol>
 </nav>
@@ -110,11 +110,7 @@
                       <td>
                         <a href="{{ sub.file.url }}" class="text-decoration-none">
                           <i class="bi bi-file-earmark-text me-1"></i>
-                          {% if sub.file.name %}
-                            {{ sub.file.name|slice:"11:" }}
-                          {% else %}
-                            Файл
-                          {% endif %}
+                          {{ sub.file.name|default:"Файл" }}
                         </a>
                       </td>
                       <td>
@@ -173,7 +169,7 @@
                 <h5 class="modal-title" id="submitModalLabel{{ problem.id }}">Отправка решения: {{ problem.title }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <form action="{% url 'submit' problem_id=problem.id %}" method="post" enctype="multipart/form-data">
+              <form action="{% url 'submit' problem_id=problem.id %}" method="post" enctype="multipart/form-data" id="submission-form-{{ problem.id }}" onsubmit="disableSubmitButton(this)">
                 {% csrf_token %}
                 <div class="modal-body">
                   <div class="mb-3">
@@ -184,7 +180,7 @@
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                  <button type="submit" class="btn btn-success">Отправить</button>
+                  <button type="submit" class="btn btn-success" id="submit-btn-{{ problem.id }}">Отправить</button>
                 </div>
               </form>
             </div>
@@ -204,4 +200,57 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+  // Функция для предотвращения повторной отправки формы
+  function disableSubmitButton(form) {
+    // Находим кнопку отправки в форме
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    // Меняем текст и отключаем кнопку
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+    submitButton.disabled = true;
+    
+    // Возвращаем true, чтобы форма всё равно отправилась
+    return true;
+  }
+
+  // Закрываем модальное окно после отправки формы
+  document.addEventListener('DOMContentLoaded', function() {
+    // Если в URL есть параметр submission_success, значит форма была отправлена успешно
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('submission_success')) {
+      // Удаляем параметр из URL без перезагрузки страницы
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Показываем уведомление об успешной отправке
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        const toast = document.createElement('div');
+        toast.className = 'toast show bg-success text-white';
+        toast.innerHTML = `
+          <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Успешно</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+          </div>
+          <div class="toast-body">
+            Решение успешно отправлено на проверку!
+          </div>
+        `;
+        toastContainer.appendChild(toast);
+        
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            toastContainer.removeChild(toast);
+          }, 500);
+        }, 5000);
+      }
+    }
+  });
+</script>
+
+<!-- Контейнер для уведомлений -->
+<div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;"></div>
 {% endblock %}

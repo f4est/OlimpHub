@@ -18,8 +18,27 @@
           <i class="bi bi-person-gear me-2 text-primary"></i>Редактирование профиля
         </h2>
         
-        <form method="post" enctype="multipart/form-data">
+        {% if form.errors %}
+        <div class="alert alert-danger">
+          <strong>Пожалуйста, исправьте следующие ошибки:</strong>
+          <ul>
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data" id="profile-form">
           {% csrf_token %}
+          
+          <!-- Скрытое поле с текущей ролью пользователя -->
+          <input type="hidden" name="role" value="{{ user.profile.role }}">
           
           <div class="mb-4">
             <h5 class="fw-semibold mb-3">Основная информация</h5>
@@ -35,9 +54,10 @@
               {% endif %}
               {% if user.profile.avatar %}
                 <div class="mt-2">
-                  <img src="{{ user.profile.avatar.url }}" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                  <img src="{{ user.profile.avatar.url }}?t={{ user.profile.avatar.name|default:''|urlencode }}" alt="Avatar" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
                 </div>
               {% endif %}
+              <small class="form-text text-muted">Изображение будет автоматически обрезано до квадратного формата. Рекомендуемый размер: 200x200 пикселей.</small>
             </div>
             
             <!-- О себе -->
@@ -108,10 +128,7 @@
             {% endif %}
           </div>
           
-          <div class="d-flex justify-content-between">
-            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
-              <i class="bi bi-x-lg me-1"></i>Отмена
-            </a>
+          <div class="d-grid">
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-check-lg me-1"></i>Сохранить изменения
             </button>

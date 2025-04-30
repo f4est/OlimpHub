@@ -10,6 +10,7 @@ urlpatterns = [
     path('olympiad/<int:pk>/scoreboard/', views.ScoreboardView.as_view(), name='scoreboard'),
     path('olympiad/create/', views.OlympiadCreateView.as_view(), name='olymp_create'),
     path('olympiad/<int:pk>/edit/', views.OlympiadUpdateView.as_view(), name='olymp_edit'),
+    path('olympiad/<int:pk>/enroll/', views.enroll_olympiad, name='enroll_olympiad'),
     path('submit/<int:problem_id>/', views.submit_solution, name='submit'),
     path('signup/', views.SignUpView.as_view(), name='signup'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
@@ -35,6 +36,10 @@ urlpatterns = [
     
     # API для автоматического обновления статусов
     path('api/auto-update-statuses/', views.auto_update_olympiad_statuses, name='auto_update_statuses'),
+    
+    # Статические страницы
+    path('about/', views.AboutView.as_view(), name='about'),
+    path('contacts/', views.ContactsView.as_view(), name='contacts'),
 ]
 
 # Добавление настроек медиа-файлов для режима разработки

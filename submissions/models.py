@@ -1,6 +1,7 @@
 from django.db import models
 from olympiad.models import Enrollment, Problem
 import os
+import time
 
 class Submission(models.Model):
     PENDING = 'pending'
@@ -24,3 +25,12 @@ class Submission(models.Model):
     
     def filename(self):
         return os.path.basename(self.file.name) if self.file else "Нет файла"
+        
+    def save(self, *args, **kwargs):
+        # Добавляем суффикс с timestamp к имени файла, чтобы избежать конфликтов
+        if self.file and not self.id:  # Только для новых объектов
+            file_name, file_ext = os.path.splitext(self.file.name)
+            time_suffix = int(time.time())
+            self.file.name = f"solution_{self.enrollment.user.username}_{time_suffix}{file_ext}"
+        
+        return super().save(*args, **kwargs)

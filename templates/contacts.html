@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
+    <li class="breadcrumb-item active">Контакты</li>
+  </ol>
+</nav>
+
+<div class="mb-5">
+  <div class="py-3 mb-4 bg-primary bg-gradient text-white rounded-4 shadow">
+    <div class="container py-3">
+      <h1 class="fw-bold mb-3">Свяжитесь с нами</h1>
+      <p class="lead mb-0">Мы всегда открыты для общения и готовы ответить на ваши вопросы</p>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <!-- Контактная информация -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <h3 class="fw-bold mb-4">Контактная информация</h3>
+          
+          <div class="mb-4">
+            <h5 class="fw-semibold mb-3">Адрес</h5>
+            <p class="d-flex align-items-start mb-0">
+              <i class="bi bi-geo-alt text-primary me-2 mt-1"></i>
+              <span>Россия, г. Москва, ул. Ленина, д. 42, офис 301</span>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h5 class="fw-semibold mb-3">Телефоны</h5>
+            <p class="d-flex align-items-center mb-2">
+              <i class="bi bi-telephone text-primary me-2"></i>
+              <span>+7 (800) 555-35-35</span>
+            </p>
+            <p class="d-flex align-items-center mb-0">
+              <i class="bi bi-telephone text-primary me-2"></i>
+              <span>+7 (495) 123-45-67</span>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h5 class="fw-semibold mb-3">Email</h5>
+            <p class="d-flex align-items-center mb-2">
+              <i class="bi bi-envelope text-primary me-2"></i>
+              <a href="mailto:info@olimphub.com" class="text-decoration-none">info@olimphub.com</a>
+            </p>
+            <p class="d-flex align-items-center mb-0">
+              <i class="bi bi-envelope text-primary me-2"></i>
+              <a href="mailto:support@olimphub.com" class="text-decoration-none">support@olimphub.com</a>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h5 class="fw-semibold mb-3">Часы работы</h5>
+            <p class="d-flex align-items-center mb-2">
+              <i class="bi bi-clock text-primary me-2"></i>
+              <span>Пн-Пт: 9:00 - 18:00</span>
+            </p>
+            <p class="d-flex align-items-center mb-0">
+              <i class="bi bi-clock text-primary me-2"></i>
+              <span>Сб-Вс: Выходные</span>
+            </p>
+          </div>
+          
+          <div>
+            <h5 class="fw-semibold mb-3">Социальные сети</h5>
+            <div class="d-flex">
+              <a href="#" class="btn btn-outline-primary rounded-circle me-2">
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a href="#" class="btn btn-outline-primary rounded-circle me-2">
+                <i class="bi bi-twitter-x"></i>
+              </a>
+              <a href="#" class="btn btn-outline-primary rounded-circle me-2">
+                <i class="bi bi-instagram"></i>
+              </a>
+              <a href="#" class="btn btn-outline-primary rounded-circle me-2">
+                <i class="bi bi-linkedin"></i>
+              </a>
+              <a href="#" class="btn btn-outline-primary rounded-circle">
+                <i class="bi bi-youtube"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Форма обратной связи -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+          <h3 class="fw-bold mb-4">Форма обратной связи</h3>
+          <p class="text-muted mb-4">Заполните форму ниже, и мы свяжемся с вами в ближайшее время</p>
+          
+          <form>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="name" class="form-label fw-medium">Ваше имя</label>
+                <input type="text" class="form-control" id="name" placeholder="Введите ваше имя">
+              </div>
+              <div class="col-md-6">
+                <label for="email" class="form-label fw-medium">Электронная почта</label>
+                <input type="email" class="form-control" id="email" placeholder="Введите ваш email">
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="subject" class="form-label fw-medium">Тема</label>
+              <select class="form-select" id="subject">
+                <option selected>Выберите тему обращения</option>
+                <option value="1">Общие вопросы</option>
+                <option value="2">Техническая поддержка</option>
+                <option value="3">Сотрудничество</option>
+                <option value="4">Предложения и пожелания</option>
+                <option value="5">Другое</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <label for="message" class="form-label fw-medium">Сообщение</label>
+              <textarea class="form-control" id="message" rows="5" placeholder="Введите ваше сообщение"></textarea>
+            </div>
+            
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="privacy">
+              <label class="form-check-label" for="privacy">
+                Я согласен на обработку персональных данных в соответствии с <a href="#" class="text-decoration-none">политикой конфиденциальности</a>
+              </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-send me-2"></i>Отправить сообщение
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Карта -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h3 class="fw-bold mb-4">Мы на карте</h3>
+          <div class="ratio ratio-16x9 rounded overflow-hidden">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2244.3965362377105!2d37.6185!3d55.7540!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTXCsDQ1JzE0LjQiTiAzN8KwMzcnMDYuNiJF!5e0!3m2!1sru!2sru!4v1650000000000!5m2!1sru!2sru" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- FAQ блок -->
+  <h2 class="fw-bold mb-4">Часто задаваемые вопросы</h2>
+  <div class="accordion mb-5" id="faqAccordion">
+    <div class="accordion-item border-0 mb-3 shadow-sm">
+      <h3 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+          Как зарегистрироваться на соревнование?
+        </button>
+      </h3>
+      <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          <p>Для регистрации на соревнование необходимо выполнить следующие шаги:</p>
+          <ol>
+            <li>Авторизуйтесь на платформе</li>
+            <li>Выберите интересующее вас соревнование из списка</li>
+            <li>На странице соревнования нажмите кнопку "Зарегистрироваться"</li>
+            <li>Следуйте дальнейшим инструкциям</li>
+          </ol>
+          <p>После успешной регистрации вы получите доступ к заданиям соревнования, когда оно начнется.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="accordion-item border-0 mb-3 shadow-sm">
+      <h3 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+          Как создать собственное соревнование?
+        </button>
+      </h3>
+      <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          <p>Для создания собственного соревнования вам необходимо иметь статус преподавателя. Чтобы создать соревнование:</p>
+          <ol>
+            <li>Войдите в свой аккаунт</li>
+            <li>В верхнем меню выберите "Преподавателю" и нажмите "Создать соревнование"</li>
+            <li>Заполните все необходимые поля в форме создания</li>
+            <li>Добавьте задания для соревнования</li>
+            <li>Опубликуйте соревнование</li>
+          </ol>
+          <p>Если у вас возникли сложности, обратитесь в службу поддержки.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="accordion-item border-0 mb-3 shadow-sm">
+      <h3 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+          Как изменить информацию в профиле?
+        </button>
+      </h3>
+      <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          <p>Для редактирования своего профиля:</p>
+          <ol>
+            <li>Войдите в свой аккаунт</li>
+            <li>Нажмите на свое имя в правом верхнем углу</li>
+            <li>Выберите "Профиль" в выпадающем меню</li>
+            <li>На странице профиля нажмите кнопку "Редактировать профиль"</li>
+            <li>Внесите необходимые изменения и сохраните их</li>
+          </ol>
+          <p>Вы можете изменить личную информацию, фотографию профиля и другие настройки.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

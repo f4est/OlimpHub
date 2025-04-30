@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
+    <li class="breadcrumb-item active">О нас</li>
+  </ol>
+</nav>
+
+<div class="mb-5">
+  <div class="py-3 mb-4 bg-primary bg-gradient text-white rounded-4 shadow">
+    <div class="container py-3">
+      <h1 class="fw-bold mb-3">О платформе OlimpHub</h1>
+      <p class="lead mb-0">Мы создаем возможности для обучения и развития через соревнования</p>
+    </div>
+  </div>
+
+  <!-- Секция "Наша миссия" -->
+  <div class="row mb-5">
+    <div class="col-lg-8">
+      <h2 class="fw-bold mb-4">Наша миссия</h2>
+      <p class="lead">OlimpHub — это современная образовательная платформа, созданная для организации и проведения олимпиад и соревнований в различных предметных областях.</p>
+      <p>Наша миссия — сделать образовательные соревнования доступными для всех желающих, вдохновить молодых людей на достижения и создать среду, где таланты могут раскрыться в полной мере.</p>
+      <p>С помощью OlimpHub преподаватели могут легко создавать увлекательные соревнования для своих учеников, а учащиеся — развивать свои навыки, соревнуясь со сверстниками в дружественной атмосфере.</p>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 rounded-4 shadow-sm h-100">
+        <div class="card-body p-4 text-center">
+          <div class="display-1 text-primary mb-3">
+            <i class="bi bi-lightbulb"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Инновации в образовании</h4>
+          <p>Мы стремимся внедрять современные технологии в образовательный процесс, делая обучение эффективным, увлекательным и доступным.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Статистика -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="stat-card">
+        <i class="bi bi-trophy text-warning fs-1 mb-3"></i>
+        <div class="stat-number">{{ olympiads_count }}</div>
+        <div class="stat-label">Проведено соревнований</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <i class="bi bi-people-fill text-primary fs-1 mb-3"></i>
+        <div class="stat-number">{{ users_count }}</div>
+        <div class="stat-label">Пользователей платформы</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-card">
+        <i class="bi bi-stars text-success fs-1 mb-3"></i>
+        <div class="stat-number">{{ active_olympiads }}</div>
+        <div class="stat-label">Активных соревнований</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Наша команда -->
+  <h2 class="fw-bold mb-4">Наша команда</h2>
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="rounded-circle mx-auto mb-3 overflow-hidden" style="width: 120px; height: 120px; background-color: #e9ecef;">
+            <i class="bi bi-person-fill text-secondary" style="font-size: 80px; line-height: 120px;"></i>
+          </div>
+          <h5 class="card-title fw-bold">Иванов Иван</h5>
+          <p class="card-subtitle mb-3 text-muted">Основатель и генеральный директор</p>
+          <p class="small">Эксперт в области образовательных технологий с 10-летним опытом работы</p>
+          <div class="mt-3">
+            <a href="#" class="text-decoration-none me-2"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="text-decoration-none me-2"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="text-decoration-none"><i class="bi bi-envelope"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="rounded-circle mx-auto mb-3 overflow-hidden" style="width: 120px; height: 120px; background-color: #e9ecef;">
+            <i class="bi bi-person-fill text-secondary" style="font-size: 80px; line-height: 120px;"></i>
+          </div>
+          <h5 class="card-title fw-bold">Петрова Екатерина</h5>
+          <p class="card-subtitle mb-3 text-muted">Технический директор</p>
+          <p class="small">Опытный разработчик с глубокими знаниями в области веб-технологий</p>
+          <div class="mt-3">
+            <a href="#" class="text-decoration-none me-2"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="text-decoration-none me-2"><i class="bi bi-github"></i></a>
+            <a href="#" class="text-decoration-none"><i class="bi bi-envelope"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="rounded-circle mx-auto mb-3 overflow-hidden" style="width: 120px; height: 120px; background-color: #e9ecef;">
+            <i class="bi bi-person-fill text-secondary" style="font-size: 80px; line-height: 120px;"></i>
+          </div>
+          <h5 class="card-title fw-bold">Сидоров Алексей</h5>
+          <p class="card-subtitle mb-3 text-muted">Руководитель образовательных программ</p>
+          <p class="small">Педагог со стажем и эксперт в области образовательных методик</p>
+          <div class="mt-3">
+            <a href="#" class="text-decoration-none me-2"><i class="bi bi-linkedin"></i></a>
+            <a href="#" class="text-decoration-none me-2"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="text-decoration-none"><i class="bi bi-envelope"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Наши ценности -->
+  <h2 class="fw-bold mb-4">Наши ценности</h2>
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white" 
+                 style="width: 48px; height: 48px; min-width: 48px;">
+              <i class="bi bi-book fs-4"></i>
+            </div>
+            <h5 class="card-title fw-bold ms-3 mb-0">Качество образования</h5>
+          </div>
+          <p class="card-text">Мы стремимся предоставлять высококачественные образовательные материалы и соревнования, которые действительно помогают в обучении.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white" 
+                 style="width: 48px; height: 48px; min-width: 48px;">
+              <i class="bi bi-people fs-4"></i>
+            </div>
+            <h5 class="card-title fw-bold ms-3 mb-0">Доступность для всех</h5>
+          </div>
+          <p class="card-text">Наша платформа создана так, чтобы быть доступной для всех учащихся, независимо от их местонахождения и возможностей.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="d-flex align-items-center justify-content-center rounded-circle bg-warning text-dark" 
+                 style="width: 48px; height: 48px; min-width: 48px;">
+              <i class="bi bi-lightbulb fs-4"></i>
+            </div>
+            <h5 class="card-title fw-bold ms-3 mb-0">Инновации</h5>
+          </div>
+          <p class="card-text">Мы постоянно внедряем новые технологии и методики, чтобы сделать процесс обучения современным и эффективным.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

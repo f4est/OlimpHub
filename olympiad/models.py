@@ -47,6 +47,15 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
     
+    def save(self, *args, **kwargs):
+        # Создаем директорию для аватарок, если она не существует
+        avatar_dir = os.path.join(settings.MEDIA_ROOT, 'avatars')
+        if not os.path.exists(avatar_dir):
+            os.makedirs(avatar_dir, exist_ok=True)
+        
+        # Сохраняем модель
+        super().save(*args, **kwargs)
+    
     @property
     def is_teacher(self):
         return self.role == self.TEACHER
@@ -121,14 +130,16 @@ class Enrollment(models.Model):
         return f"{self.user} -> {self.olympiad}"
 
 class Problem(models.Model):
-    olympiad = models.ForeignKey(Olympiad, on_delete=models.CASCADE, related_name='problems')
+    olympiad = models.ForeignKey(Olympiad, related_name='problems', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
     max_score = models.PositiveIntegerField(default=100)
     statement_file = models.FileField(upload_to='statements/', validators=[validate_file_size])
-    description = models.TextField(blank=True)
-
+    
     def __str__(self):
         return self.title
-    
+        
+    @property
     def filename(self):
-        return os.path.basename(self.statement_file.name) if self.statement_file else "Нет файла"
+        """Возвращает имя файла без пути"""
+        return os.path.basename(self.statement_file.name) if self.statement_file else ""

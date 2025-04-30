@@ -161,7 +161,7 @@
           {% else %}
             {% if olymp.status == 'upcoming' or olymp.status == 'active' %}
               {% if can_register %}
-                <form method="post">
+                <form method="post" action="{% url 'enroll_olympiad' pk=olymp.pk %}">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check-circle me-1"></i>Зарегистрироваться
@@ -204,11 +204,11 @@
   </div>
   
   <div class="col-md-4">
-    <div class="card border-0 shadow-sm sticky-top" style="top: 20px">
+    <div class="card border-0 shadow-sm olymp-info-sidebar">
       <div class="card-body p-4">
-        <h5 class="fw-semibold mb-3">
+        <h4 class="fw-bold mb-4">
           <i class="bi bi-info-circle me-2 text-primary"></i>Информация
-        </h5>
+        </h4>
         
         <div class="d-flex align-items-center mb-3">
           <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" 
