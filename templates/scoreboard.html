@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load olympiad_filters %}
 {% block content %}
 <nav aria-label="breadcrumb" class="mb-4">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' olymp.pk %}" class="text-decoration-none">{{ olymp.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' pk=olymp.pk %}" class="text-decoration-none">{{ olymp.title }}</a></li>
     <li class="breadcrumb-item active">Таблица результатов</li>
   </ol>
 </nav>
@@ -11,68 +12,62 @@
 <div class="card border-0 shadow-sm mb-4">
   <div class="card-body p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="fw-bold mb-0">
-        <i class="bi bi-trophy me-2 text-warning"></i>Таблица результатов
-      </h2>
+      <div>
+        <h2 class="fw-bold mb-1">{{ olymp.title }}: Результаты</h2>
+        <div class="text-muted">{{ olymp.subject }}</div>
+      </div>
       
-      <a href="{% url 'tasks' olymp.pk %}" class="btn btn-outline-primary">
-        <i class="bi bi-collection-play me-1"></i>К заданиям
+      <a href="{% url 'tasks' pk=olymp.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left me-1"></i>К заданиям
       </a>
     </div>
     
-    <h5 class="mb-4">{{ olymp.title }}</h5>
-    
     {% if results %}
-      <div class="table-responsive scoreboard-table">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th class="text-center" width="70">#</th>
-              <th>Участник</th>
-              {% for p in problems %}
-                <th class="text-center">{{ p.title|truncatechars:8 }}</th>
-              {% endfor %}
-              <th class="text-center">Всего</th>
-            </tr>
-          </thead>
-  <tbody>
-  {% for r in results %}
-              <tr {% if r.user == request.user.username %}class="table-primary"{% endif %}>
-                <td class="text-center fw-semibold">
-                  {% if forloop.counter <= 3 %}
-                    {% if forloop.counter == 1 %}
-                      <i class="bi bi-trophy-fill text-warning fs-5"></i>
-                    {% elif forloop.counter == 2 %}
-                      <i class="bi bi-trophy-fill text-secondary fs-5"></i>
-                    {% else %}
-                      <i class="bi bi-trophy-fill text-danger fs-5"></i>
-                    {% endif %}
-                  {% else %}
-                    {{ forloop.counter }}
-                  {% endif %}
-                </td>
-                <td class="fw-medium">{{ r.user }}</td>
-                
-                {% for score in r.problem_scores %}
-                  <td class="text-center">
-                    {% if score > 0 %}
-                      <span class="badge bg-success rounded-pill">{{ score }}</span>
-                    {% elif score == 0 %}
-                      <span class="text-muted">–</span>
-                    {% endif %}
-                  </td>
-                {% endfor %}
-                
-                <td class="text-center fw-semibold">{{ r.total }}</td>
-              </tr>
-  {% endfor %}
-  </tbody>
-</table>
-      </div>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Участник</th>
+            {% for problem in problems %}
+            <th>{{ problem.title }}</th>
+            {% endfor %}
+            <th>Всего</th>
+            {% if request.user.profile.is_teacher or request.user.profile.is_admin or olymp.creator == request.user %}
+            <th>Действия</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in results %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ result.user }}</td>
+            {% for score in result.problem_scores %}
+            <td>{{ score }}</td>
+            {% endfor %}
+            <td class="fw-bold">{{ result.total }}</td>
+            {% if request.user.profile.is_teacher or request.user.profile.is_admin or olymp.creator == request.user %}
+            <td>
+              <a href="{% url 'user_submissions' olympiad_id=olymp.id user_id=result.user_id %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-check-square"></i> Проверить решения
+              </a>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
     {% else %}
-      <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>Пока нет результатов для отображения.
+    <div class="text-center py-5">
+      <div class="display-1 text-muted mb-3">
+        <i class="bi bi-trophy"></i>
       </div>
+      <h3>Нет результатов</h3>
+      <p class="text-muted">Таблица результатов будет доступна после отправки решений участниками.</p>
+    </div>
     {% endif %}
   </div>
 </div>
@@ -80,12 +75,60 @@
 {% if olymp.status == 'active' %}
 <div class="alert alert-warning">
   <div class="d-flex">
-    <div class="me-3 fs-3"><i class="bi bi-exclamation-triangle"></i></div>
+    <div class="me-3 fs-3">
+      <i class="bi bi-hourglass-split"></i>
+    </div>
     <div>
-      <h5 class="alert-heading">Соревнование продолжается!</h5>
-      <p class="mb-0">Таблица результатов обновляется в реальном времени. Окончательные результаты будут доступны после завершения соревнования.</p>
+      <h5 class="alert-heading">Соревнование активно</h5>
+      <p class="mb-0">
+        Результаты могут меняться по мере отправки и проверки решений.
+        Окончательные результаты будут доступны после завершения соревнования.
+      </p>
     </div>
   </div>
 </div>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Удаляем обработчики для форм проверки заданий, чтобы избежать "прыгания"
+  document.querySelectorAll('.review-form').forEach(form => {
+    // Не добавляем никаких обработчиков событий для форм проверки
+  });
+  
+  // Если в URL есть параметр review_success, показываем уведомление
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('review_success')) {
+    // Удаляем параметр из URL без перезагрузки страницы
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    // Показываем уведомление об успешной проверке
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+    toastContainer.style.zIndex = '1080';
+    document.body.appendChild(toastContainer);
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast show bg-primary text-white';
+    toast.innerHTML = `
+      <div class="toast-header bg-primary text-white">
+        <strong class="me-auto">Успешно</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body">
+        Решение успешно проверено!
+      </div>
+    `;
+    toastContainer.appendChild(toast);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        toastContainer.removeChild(toast);
+      }, 500);
+    }, 5000);
+  }
+});
+</script>
 {% endblock %}

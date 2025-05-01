@@ -250,32 +250,54 @@ function applyFilters() {
   const sort = document.getElementById('sortSelect').value;
   const subject = document.getElementById('subjectSelect').value;
   const difficulty = document.getElementById('difficultySelect').value;
-  const status = "{{ current_status }}";
+  
+  // Получаем текущий выбранный статус из URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const status = urlParams.get('status') || 'all';
   
   // Проверяем наличие чекбокса "Мои соревнования"
-  let myOlympiads = '';
+  let myFlag = '';
   const myOlympiadsToggle = document.getElementById('myOlympiadsToggle');
   if (myOlympiadsToggle && myOlympiadsToggle.checked) {
-    myOlympiads = '&my=1';
+    myFlag = '1';
   }
   
-  // Строим URL с параметрами
-  let url = '?';
-  if (q) url += `q=${encodeURIComponent(q)}&`;
-  if (sort !== 'popularity') url += `sort=${sort}&`;
-  if (subject) url += `subject=${encodeURIComponent(subject)}&`;
-  if (difficulty) url += `difficulty=${difficulty}&`;
-  if (status !== 'all') url += `status=${status}&`;
-  url += myOlympiads;
+  // Создаем объект URLSearchParams для конструирования URL
+  const params = new URLSearchParams();
   
-  // Удаляем лишний & в конце, если есть
-  if (url.endsWith('&')) {
-    url = url.slice(0, -1);
-  }
+  // Добавляем только непустые параметры
+  if (q) params.append('q', q);
+  if (sort && sort !== 'popularity') params.append('sort', sort);
+  if (subject) params.append('subject', subject);
+  if (difficulty) params.append('difficulty', difficulty);
+  if (status && status !== 'all') params.append('status', status);
+  if (myFlag) params.append('my', myFlag);
   
   // Переходим на новую страницу с фильтрами
-  window.location.href = url;
+  window.location.href = '?' + params.toString();
 }
+
+// Обрабатываем клик по вкладкам навигации, чтобы учесть статус
+document.addEventListener('DOMContentLoaded', function() {
+  const statusTabs = document.querySelectorAll('.nav-pills .nav-link');
+  statusTabs.forEach(tab => {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+      window.location.href = href;
+    });
+  });
+  
+  // Также обработаем нажатие Enter в поле поиска
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        applyFilters();
+      }
+    });
+  }
+});
 
 // Инициализация таймеров для предстоящих соревнований
 document.addEventListener('DOMContentLoaded', function() {
@@ -315,18 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
     {% endif %}
   {% endfor %}
-});
-
-// Обрабатываем клик по вкладкам навигации, чтобы учесть статус
-document.addEventListener('DOMContentLoaded', function() {
-  const statusTabs = document.querySelectorAll('.nav-pills .nav-link');
-  statusTabs.forEach(tab => {
-    tab.addEventListener('click', function(e) {
-      e.preventDefault();
-      const href = this.getAttribute('href');
-      window.location.href = href;
-    });
-  });
 });
 </script>
 {% endblock %}

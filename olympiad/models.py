@@ -143,3 +143,8 @@ class Problem(models.Model):
     def filename(self):
         """Возвращает имя файла без пути"""
         return os.path.basename(self.statement_file.name) if self.statement_file else ""
+        
+    def get_user_submissions(self):
+        """Возвращает все отправки по данной задаче"""
+        from submissions.models import Submission  # Правильный импорт из приложения submissions
+        return Submission.objects.filter(problem=self).order_by('-submitted_at')

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'index' %}" class="text-decoration-none">Главная</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'olymp_detail' pk=olympiad.pk %}" class="text-decoration-none">{{ olympiad.title }}</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'scoreboard' pk=olympiad.pk %}" class="text-decoration-none">Результаты</a></li>
+    <li class="breadcrumb-item active">Решения {{ user_data.username }}</li>
+  </ol>
+</nav>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="fw-bold mb-1">Решения участника: {{ user_data.username }}</h2>
+        <div class="text-muted">{{ olympiad.title }}</div>
+      </div>
+      
+      <a href="{% url 'scoreboard' pk=olympiad.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left me-1"></i>К результатам
+      </a>
+    </div>
+    
+    {% if submissions_by_problem %}
+    {% for problem_id, data in submissions_by_problem.items %}
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-semibold">{{ data.problem.title }}</h5>
+        <span class="badge bg-primary rounded-pill">Макс. {{ data.problem.max_score }} баллов</span>
+      </div>
+      
+      <div class="card-body">
+        {% if data.problem.description %}
+        <p>{{ data.problem.description }}</p>
+        {% endif %}
+        
+        <div class="mb-3">
+          {% if data.problem.statement_file %}
+          <a href="{{ data.problem.statement_file.url }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+            <i class="bi bi-file-earmark me-1"></i>Скачать условие задания
+          </a>
+          {% endif %}
+        </div>
+        
+        <h6 class="fw-semibold mt-4">Отправленные решения:</h6>
+        
+        {% if data.submissions %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Дата отправки</th>
+                <th>Статус</th>
+                <th>Оценка</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in data.submissions %}
+              <tr>
+                <td>{{ sub.submitted_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                  <span class="badge {% if sub.status == 'reviewed' %}bg-success{% else %}bg-warning{% endif %}">
+                    {{ sub.get_status_display }}
+                  </span>
+                </td>
+                <td>{{ sub.score|default:"-" }} {% if sub.score %}/ {{ data.problem.max_score }}{% endif %}</td>
+                <td>
+                  <div class="btn-group">
+                    <a href="{% url 'review_submission_page' submission_id=sub.id %}" class="btn btn-sm btn-primary">
+                      <i class="bi bi-check-square me-1"></i>Проверить
+                    </a>
+                    <a href="{{ sub.file.url }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                      <i class="bi bi-file-earmark-text me-1"></i>Файл
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          Нет отправленных решений для этого задания
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    
+    {% else %}
+    <div class="text-center py-5">
+      <div class="display-1 text-muted mb-3">
+        <i class="bi bi-exclamation-circle"></i>
+      </div>
+      <h3>Нет отправленных решений</h3>
+      <p class="text-muted">Участник еще не отправил ни одного решения.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if messages %}
+<div id="message-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+  {% for message in messages %}
+  <div class="toast show bg-{{ message.tags }} text-white">
+    <div class="toast-header bg-{{ message.tags }} text-white">
+      <strong class="me-auto">
+        {% if message.tags == 'success' %}Успешно
+        {% elif message.tags == 'info' %}Информация
+        {% elif message.tags == 'warning' %}Предупреждение
+        {% elif message.tags == 'error' %}Ошибка
+        {% else %}Сообщение
+        {% endif %}
+      </strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body">
+      {{ message }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Автоматически скрываем сообщения через 5 секунд
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 500);
+      }, 5000);
+    });
+  });
+</script>
+{% endif %}
+{% endblock %} 

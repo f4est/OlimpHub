@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, TemplateView, FormView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import login
-from django.db.models import Sum, Count, Q, F, ExpressionWrapper, DurationField
-from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Count, Q, F, ExpressionWrapper, DurationField, Case, When, Value, IntegerField
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.urls import reverse_lazy, reverse
@@ -314,9 +314,9 @@ class OlympiadListView(ListView):
         if sort == 'popularity':
             queryset = queryset.order_by('-participants_count')
         elif sort == 'newest':
-            queryset = queryset.order_by('-created_at')
+            queryset = queryset.order_by('-start_at')
         elif sort == 'oldest':
-            queryset = queryset.order_by('created_at')
+            queryset = queryset.order_by('start_at')
         elif sort == 'duration':
             queryset = queryset.order_by('duration')
         elif sort == 'random':
@@ -479,7 +479,7 @@ class TasksView(LoginRequiredMixin, View):
             
             # Если пользователь не зарегистрирован и не является преподавателем или админом,
             # перенаправляем его на страницу соревнования
-            if not (request.user.profile.is_teacher or request.user.profile.is_admin or olymp.creator == request.user):
+            if not (hasattr(request.user, 'profile') and (request.user.profile.is_teacher or request.user.profile.is_admin) or olymp.creator == request.user):
                 messages.warning(request, "Вы не зарегистрированы на это соревнование. Пожалуйста, зарегистрируйтесь сначала.")
                 return redirect('olymp_detail', pk=olymp.pk)
         
@@ -496,19 +496,44 @@ class TasksView(LoginRequiredMixin, View):
                 'submissions': []
             }
             
-            # Добавляем решения, если пользователь зарегистрирован
-            if enrollment:
-                submissions = Submission.objects.filter(
-                    enrollment=enrollment,
+            # Добавляем решения
+            # Если пользователь зарегистрирован - только его решения
+            # Если преподаватель/админ/создатель - все решения по этой задаче
+            is_teacher = hasattr(request.user, 'profile') and request.user.profile.is_teacher
+            is_admin = hasattr(request.user, 'profile') and request.user.profile.is_admin
+            is_creator = olymp.creator == request.user
+            
+            if is_teacher or is_admin or is_creator:
+                # Для преподавателей, админов или создателей - показываем все решения
+                all_submissions = Submission.objects.filter(
                     problem=problem
                 ).order_by('-submitted_at')
+                problem_with_submissions['submissions'] = all_submissions
                 
-                problem_with_submissions['submissions'] = submissions
-                
-                # Добавляем статус последнего решения
-                if submissions.exists():
-                    latest_submission = submissions.first()
-                    problem_with_submissions['submission_status'] = latest_submission.status
+                # Добавляем статус последнего решения от текущего пользователя (если есть)
+                if enrollment:
+                    user_submissions = Submission.objects.filter(
+                        enrollment=enrollment,
+                        problem=problem
+                    ).order_by('-submitted_at')
+                    
+                    if user_submissions.exists():
+                        latest_submission = user_submissions.first()
+                        problem_with_submissions['submission_status'] = latest_submission.status
+            else:
+                # Для обычных пользователей - только их решения
+                if enrollment:
+                    submissions = Submission.objects.filter(
+                        enrollment=enrollment,
+                        problem=problem
+                    ).order_by('-submitted_at')
+                    
+                    problem_with_submissions['submissions'] = submissions
+                    
+                    # Добавляем статус последнего решения
+                    if submissions.exists():
+                        latest_submission = submissions.first()
+                        problem_with_submissions['submission_status'] = latest_submission.status
             
             problems_with_submissions.append(problem_with_submissions)
         
@@ -588,6 +613,53 @@ def submit_solution(request, problem_id):
         messages.error(request, f"Произошла ошибка при отправке решения. Пожалуйста, попробуйте еще раз или обратитесь к администратору.")
     
     return redirect('tasks', pk=problem.olympiad.pk)
+
+
+@require_POST
+@login_required
+def review_submission(request, submission_id):
+    """Обработка проверки решения преподавателем"""
+    submission = get_object_or_404(Submission, pk=submission_id)
+    olympiad = submission.problem.olympiad
+    
+    # Проверяем права доступа
+    if not (hasattr(request.user, 'profile') and (request.user.profile.is_teacher or request.user.profile.is_admin) or olympiad.creator == request.user):
+        messages.error(request, "У вас нет прав для проверки решений.")
+        return redirect('tasks', pk=olympiad.pk)
+    
+    # Получаем данные из формы
+    score = request.POST.get('score')
+    comment = request.POST.get('comment', '')
+    status = 'reviewed' if 'status' in request.POST else 'pending'
+    
+    try:
+        # Проверяем корректность оценки
+        score = int(score)
+        if score < 0 or score > submission.problem.max_score:
+            messages.error(request, f"Оценка должна быть в диапазоне от 0 до {submission.problem.max_score}.")
+            return redirect('tasks', pk=olympiad.pk)
+        
+        # Обновляем запись о решении
+        submission.score = score
+        submission.comment = comment
+        submission.status = status
+        submission.save()
+        
+        messages.success(request, "Решение успешно проверено!")
+        # Добавляем параметр в URL для обработки в JS
+        return redirect(f"{reverse('tasks', kwargs={'pk': olympiad.pk})}?review_success=1")
+        
+    except (ValueError, TypeError):
+        messages.error(request, "Неверный формат оценки.")
+        return redirect('tasks', pk=olympiad.pk)
+    except Exception as e:
+        # Записываем ошибку в лог и показываем пользователю
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error reviewing submission: {str(e)}", exc_info=True)
+        
+        messages.error(request, "Произошла ошибка при сохранении проверки. Пожалуйста, попробуйте еще раз.")
+        return redirect('tasks', pk=olympiad.pk)
 
 
 # ────────────────────── табло результатов ──────────────────────
@@ -1005,3 +1077,104 @@ class AboutView(TemplateView):
 class ContactsView(TemplateView):
     """Страница 'Контакты'"""
     template_name = 'contacts.html'
+
+# ────────────────────── отдельные страницы отправки и проверки ──────────────────────
+@login_required
+def submit_solution_page(request, problem_id):
+    """Отдельная страница для отправки решения"""
+    problem = get_object_or_404(Problem, pk=problem_id)
+    olympiad = problem.olympiad
+    
+    # Проверяем, активно ли соревнование
+    olympiad.update_status()
+    if olympiad.status != Olympiad.ACTIVE:
+        messages.error(request, "Соревнование не активно. Отправка решений невозможна.")
+        return redirect('tasks', pk=olympiad.pk)
+    
+    # Получаем регистрацию пользователя
+    try:
+        enrollment = Enrollment.objects.get(user=request.user, olympiad=olympiad)
+    except Enrollment.DoesNotExist:
+        enrollment = None
+    
+    # Получаем предыдущие отправки пользователя для этой задачи
+    submissions = []
+    if enrollment:
+        submissions = Submission.objects.filter(
+            enrollment=enrollment,
+            problem=problem
+        ).order_by('-submitted_at')
+    
+    context = {
+        'problem': problem,
+        'submissions': submissions
+    }
+    
+    return render(request, 'submit_solution.html', context)
+
+@login_required
+def review_submission_page(request, submission_id):
+    """Отдельная страница для проверки решения"""
+    submission = get_object_or_404(Submission, pk=submission_id)
+    olympiad = submission.problem.olympiad
+    
+    # Проверяем права доступа
+    if not (hasattr(request.user, 'profile') and 
+            (request.user.profile.is_teacher or request.user.profile.is_admin) or 
+            olympiad.creator == request.user):
+        messages.error(request, "У вас нет прав для проверки решений.")
+        return redirect('tasks', pk=olympiad.pk)
+    
+    # Получаем другие отправки этого пользователя в текущей олимпиаде
+    other_submissions = Submission.objects.filter(
+        enrollment__user=submission.enrollment.user,
+        problem__olympiad=olympiad
+    ).order_by('-submitted_at')
+    
+    context = {
+        'submission': submission,
+        'other_submissions': other_submissions
+    }
+    
+    return render(request, 'review_submission.html', context)
+
+@login_required
+def user_submissions(request, olympiad_id, user_id):
+    """Страница со всеми решениями пользователя для данной олимпиады"""
+    olympiad = get_object_or_404(Olympiad, pk=olympiad_id)
+    user = get_object_or_404(User, pk=user_id)
+    
+    # Проверяем права доступа
+    if not (hasattr(request.user, 'profile') and 
+            (request.user.profile.is_teacher or request.user.profile.is_admin) or 
+            olympiad.creator == request.user):
+        messages.error(request, "У вас нет прав для просмотра отправленных решений других пользователей.")
+        return redirect('scoreboard', pk=olympiad.pk)
+    
+    # Получаем задания олимпиады
+    problems = Problem.objects.filter(olympiad=olympiad)
+    
+    # Получаем все отправки пользователя для данной олимпиады
+    try:
+        enrollment = Enrollment.objects.get(user=user, olympiad=olympiad)
+        submissions = Submission.objects.filter(enrollment=enrollment).order_by('-submitted_at')
+    except Enrollment.DoesNotExist:
+        submissions = []
+    
+    # Группируем отправки по заданиям
+    submissions_by_problem = {}
+    for problem in problems:
+        problem_submissions = [s for s in submissions if s.problem_id == problem.id]
+        submissions_by_problem[problem.id] = {
+            'problem': problem,
+            'submissions': problem_submissions
+        }
+    
+    context = {
+        'olympiad': olympiad,
+        'user_data': user,
+        'problems': problems,
+        'submissions_by_problem': submissions_by_problem
+    }
+    
+    return render(request, 'user_submissions.html', context)

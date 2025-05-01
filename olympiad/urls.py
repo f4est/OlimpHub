@@ -12,6 +12,7 @@ urlpatterns = [
     path('olympiad/<int:pk>/edit/', views.OlympiadUpdateView.as_view(), name='olymp_edit'),
     path('olympiad/<int:pk>/enroll/', views.enroll_olympiad, name='enroll_olympiad'),
     path('submit/<int:problem_id>/', views.submit_solution, name='submit'),
+    path('review/<int:submission_id>/', views.review_submission, name='review_submission'),
     path('signup/', views.SignUpView.as_view(), name='signup'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('profile/edit/', views.ProfileUpdateView.as_view(), name='profile_edit'),
@@ -40,6 +41,11 @@ urlpatterns = [
     # Статические страницы
     path('about/', views.AboutView.as_view(), name='about'),
     path('contacts/', views.ContactsView.as_view(), name='contacts'),
+    
+    # Новые URL-маршруты для отдельных страниц отправки и проверки заданий
+    path('problem/<int:problem_id>/submit/', views.submit_solution_page, name='submit_solution_page'),
+    path('submission/<int:submission_id>/review/', views.review_submission_page, name='review_submission_page'),
+    path('olympiad/<int:olympiad_id>/user/<int:user_id>/submissions/', views.user_submissions, name='user_submissions'),
 ]
 
 # Добавление настроек медиа-файлов для режима разработки

@@ -23,6 +23,15 @@ class Submission(models.Model):
     def __str__(self):
         return f"{self.enrollment.user.username} - {self.problem.title}"
     
+    @property
+    def user(self):
+        """Возвращает пользователя, создавшего решение"""
+        return self.enrollment.user
+    
+    def get_status_display(self):
+        """Возвращает отображаемое значение статуса"""
+        return dict(self.STATUS_CHOICES).get(self.status, self.status)
+    
     def filename(self):
         return os.path.basename(self.file.name) if self.file else "Нет файла"
         
