@@ -15,6 +15,7 @@ tzdata==2025.2
 whitenoise==6.9.0
 python-dotenv==1.0.1
 django-cleanup==8.1.0
-pytest==8.1.1
-pytest-django==4.8.0
-coverage==7.4.4 
+requests==2.31.0
+bootstrap5==23.3
+django-bootstrap5==23.3
+django-chartjs==2.3.0 
