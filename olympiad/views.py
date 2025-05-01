@@ -111,7 +111,7 @@ class UserUpdateView(AdminRequiredMixin, UpdateView):
     """Позволяет администратору редактировать существующих пользователей"""
     model = User
     template_name = 'admin/user_form.html'
-    fields = ['username', 'email', 'is_active']
+    fields = ['username', 'email', 'first_name', 'last_name', 'is_active']
     success_url = reverse_lazy('user_list')
     
     def get_context_data(self, **kwargs):
@@ -270,7 +270,7 @@ class OlympiadListView(ListView):
         sort = self.request.GET.get('sort', 'popularity')
         subject = self.request.GET.get('subject', '')
         difficulty = self.request.GET.get('difficulty', '')
-        my_olympiads = self.request.GET.get('my', False)
+        my_olympiads = self.request.GET.get('my', '0')
         
         # Фильтрация по параметрам
         now = timezone.now()
@@ -305,10 +305,19 @@ class OlympiadListView(ListView):
             queryset = queryset.filter(difficulty=difficulty)
         
         # Фильтр "Мои соревнования" для преподавателей
-        if my_olympiads and self.request.user.is_authenticated:
-            user_profile = self.request.user.userprofile
-            if user_profile.role == 'teacher':
-                queryset = queryset.filter(creator=self.request.user)
+        if my_olympiads == '1' and self.request.user.is_authenticated:
+            print(f"DEBUG: my_olympiads filter activated, user={self.request.user.username}")
+            if hasattr(self.request.user, 'profile'):
+                user_profile = self.request.user.profile
+                print(f"DEBUG: user has profile, role={user_profile.role}")
+                # Проверяем, является ли пользователь преподавателем
+                if user_profile.is_teacher or user_profile.is_admin:
+                    print(f"DEBUG: filtering by creator={self.request.user.id}")
+                    queryset = queryset.filter(creator=self.request.user)
+                else:
+                    print(f"DEBUG: user is not teacher/admin, role={user_profile.role}")
+            else:
+                print("DEBUG: user has no profile")
         
         # Сортировка результатов
         if sort == 'popularity':
@@ -922,6 +931,12 @@ def get_dashboard_stats(request):
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
     
+    # Общие счетчики для страниц приложений
+    users_count = User.objects.count()
+    olympiads_count = Olympiad.objects.count()
+    problems_count = Problem.objects.count()
+    submissions_count = Submission.objects.count()
+    
     # Статистика пользователей по дням за последние 7 дней
     users_stats = []
     for i in range(7):
@@ -956,7 +971,11 @@ def get_dashboard_stats(request):
     return JsonResponse({
         'users': users_stats,
         'submissions': submissions_stats,
-        'olympiads': olympiads_stats
+        'olympiads': olympiads_stats,
+        'users_count': users_count,
+        'olympiads_count': olympiads_count,
+        'problems_count': problems_count,
+        'submissions_count': submissions_count
     })
 
 @login_required
@@ -1178,3 +1197,21 @@ def user_submissions(request, olympiad_id, user_id):
     }
     
     return render(request, 'user_submissions.html', context)
+
+# ────────────────────── удаление олимпиады ──────────────────────
+class OlympiadDeleteView(TeacherRequiredMixin, DeleteView):
+    model = Olympiad
+    template_name = 'olympiad_confirm_delete.html'
+    success_url = reverse_lazy('index')
+    
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        # Проверка прав: только создатель или админ может удалить
+        if obj.creator != self.request.user and not self.request.user.profile.is_admin:
+            raise HttpResponseForbidden("У вас нет прав для удаления этого соревнования.")
+        return obj
+    
+    def delete(self, request, *args, **kwargs):
+        olympiad = self.get_object()
+        messages.success(request, f"Соревнование '{olympiad.title}' успешно удалено.")
+        return super().delete(request, *args, **kwargs)

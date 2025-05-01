@@ -60,9 +60,22 @@ class SignUpForm(forms.ModelForm):
         return user
 
 class UserProfileForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=150,
+        required=False,
+        label='Имя',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        max_length=150,
+        required=False,
+        label='Фамилия',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = UserProfile
-        fields = ('bio', 'phone', 'organization', 'position', 'avatar', 'additional_info')
+        fields = ('bio', 'role', 'phone', 'organization', 'position', 'avatar', 'additional_info')
         labels = {
             'bio': 'О себе',
             'role': 'Роль',
@@ -76,6 +89,22 @@ class UserProfileForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'rows': 3}),
             'additional_info': forms.Textarea(attrs={'rows': 3}),
         }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and hasattr(self.instance, 'user'):
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        if hasattr(profile, 'user'):
+            profile.user.first_name = self.cleaned_data['first_name']
+            profile.user.last_name = self.cleaned_data['last_name']
+            profile.user.save()
+        if commit:
+            profile.save()
+        return profile
 
 class OlympiadForm(forms.ModelForm):
     class Meta:

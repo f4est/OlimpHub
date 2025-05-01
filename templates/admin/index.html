@@ -4,10 +4,12 @@
 {% block extrastyle %}
 {{ block.super }}
 <style type="text/css">
-    /* Основной контейнер */
+    /* Основной контейнер - убираем ограничение ширины */
     #content {
         padding: 30px 40px;
-        background-color: var(--body-bg);
+        background-color: var(--light-bg);
+        width: auto !important; /* Переопределяем ширину */
+        max-width: none !important; /* Убираем максимальную ширину */
     }
     
     /* Заголовок панели */
@@ -29,10 +31,10 @@
         color: var(--text-secondary);
         margin-bottom: 0;
         font-size: 1.05rem;
-        max-width: 600px;
+        max-width: 800px;
     }
     
-    /* Карточки разделов */
+    /* Карточки разделов - улучшаем адаптивность */
     .app-list {
         display: flex;
         flex-wrap: wrap;
@@ -41,7 +43,7 @@
     }
     
     .app-item {
-        flex: 1 1 calc(33.333% - 25px);
+        flex: 1 1 calc(25% - 25px);
         min-width: 300px;
         background: white;
         border-radius: 12px;
@@ -55,9 +57,10 @@
         box-shadow: 0 8px 25px rgba(74, 90, 248, 0.15);
     }
     
+    /* Улучшение контрастности заголовков карточек */
     .app-header {
         padding: 18px 20px;
-        background: linear-gradient(135deg, #3a4794 0%, #4a5af8 100%);
+        background: var(--primary);
         color: white;
         font-weight: 600;
         font-size: 1.1rem;
@@ -122,7 +125,7 @@
     }
     
     .quick-links-header {
-        background: linear-gradient(135deg, #3a4794 0%, #4a5af8 100%);
+        background: var(--primary);
         color: white;
         padding: 18px 20px;
         font-weight: 600;
@@ -172,19 +175,18 @@
         margin-bottom: 1.5rem;
     }
     
-    /* Статистика */
+    /* Статистика - улучшаем адаптивность и контрастность */
     .stats-container {
         display: flex;
         flex-wrap: wrap;
         gap: 25px;
         margin-bottom: 3rem;
-        justify-content: center;
     }
     
     .stat-card {
         flex: 1 1 calc(25% - 25px);
         min-width: 200px;
-        max-width: 260px;
+        max-width: 300px;
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -211,10 +213,11 @@
         color: white;
     }
     
-    .stat-users { background: linear-gradient(135deg, #4a5af8 0%, #6170ff 100%); }
-    .stat-olympiads { background: linear-gradient(135deg, #ff9d00 0%, #ffb84d 100%); }
-    .stat-problems { background: linear-gradient(135deg, #36b37e 0%, #57d9a3 100%); }
-    .stat-submissions { background: linear-gradient(135deg, #00b8d9 0%, #4dd6e7 100%); }
+    /* Улучшенные цвета с хорошим контрастом */
+    .stat-users { background: #4361ee; }
+    .stat-olympiads { background: #ff7e00; }
+    .stat-problems { background: #06d6a0; }
+    .stat-submissions { background: #0096c7; }
     
     .stat-value {
         font-size: 2.2rem;
@@ -288,16 +291,18 @@
     }
     
     .chart-col-6 {
-        flex: 0 0 calc(50% - 12.5px);
+        flex: 1 1 calc(50% - 12.5px);
         min-width: 300px;
     }
     
     /* Мелкие улучшения визуала и исправления проблем */
-    @media (max-width: 768px) {
+    @media (max-width: 992px) {
         .chart-col-6 {
             flex: 0 0 100%;
         }
-        
+    }
+    
+    @media (max-width: 768px) {
         .stats-container {
             justify-content: center;
         }
@@ -307,21 +312,21 @@
         }
     }
     
-    /* Новые стили для цветового разнообразия */
+    /* Новые стили для цветового разнообразия с улучшенным контрастом */
     .app-header-users {
-        background: linear-gradient(135deg, #4a5af8 0%, #6170ff 100%);
+        background: #4361ee;
     }
     
     .app-header-olympiads {
-        background: linear-gradient(135deg, #ff9d00 0%, #ffb84d 100%);
+        background: #ff7e00;
     }
     
     .app-header-problems {
-        background: linear-gradient(135deg, #36b37e 0%, #57d9a3 100%);
+        background: #06d6a0;
     }
     
     .app-header-submissions {
-        background: linear-gradient(135deg, #00b8d9 0%, #4dd6e7 100%);
+        background: #0096c7;
     }
     
     /* Улучшенная контрастность для чтения */
@@ -333,75 +338,6 @@
     /* Лучшая читаемость текста в графиках */
     .chart-container canvas {
         color: var(--text-primary);
-    }
-    
-    /* Специальные улучшения для темной темы */
-    @media (prefers-color-scheme: dark) {
-        /* Обновление карточек и контейнеров */
-        .app-item, .quick-links, .empty-dashboard, .stat-card, .chart-container {
-            background: var(--card-bg);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            border: 1px solid var(--border-color);
-        }
-        
-        /* Обновление границ */
-        .dashboard-title {
-            border-bottom-color: var(--border-color);
-        }
-        
-        .model-list tr:not(:last-child) {
-            border-bottom-color: var(--border-color);
-        }
-        
-        /* Улучшение эффектов при наведении */
-        .app-item:hover, .stat-card:hover {
-            box-shadow: 0 8px 25px rgba(74, 90, 248, 0.25);
-            transform: translateY(-5px);
-        }
-        
-        /* Улучшение контрастности кнопок */
-        .btn-quick-link {
-            background-color: var(--light);
-            border-color: var(--border-color);
-        }
-        
-        .btn-quick-link:hover {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* Улучшенные карточки статистики */
-        .stat-value {
-            color: var(--text-primary);
-        }
-        
-        .stat-label {
-            color: var(--text-secondary);
-        }
-        
-        /* Фильтры графиков */
-        .chart-filter {
-            background: var(--light);
-            border-color: var(--border-color);
-            color: var(--text-secondary);
-        }
-        
-        .chart-filter.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* Улучшенные стили для графиков Chart.js */
-        .chart-content canvas {
-            filter: brightness(0.9) contrast(1.1);
-        }
-        
-        /* Улучшенная видимость текста заголовков */
-        .chart-title {
-            color: var(--text-primary);
-        }
     }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -417,29 +353,29 @@
     <p>Здесь вы можете управлять всеми аспектами образовательной платформы: пользователями, соревнованиями, заданиями и настройками системы</p>
 </div>
 
-<!-- Статистика платформы -->
+<!-- Блок статистики -->
 <div class="stats-container">
     <div class="stat-card">
         <div class="stat-icon stat-users">👤</div>
-        <div class="stat-value">{{ users_count|default:"0" }}</div>
+        <div class="stat-value">{{ user_count|default:"0" }}</div>
         <div class="stat-label">Пользователей</div>
     </div>
     
     <div class="stat-card">
         <div class="stat-icon stat-olympiads">🏆</div>
-        <div class="stat-value">{{ olympiads_count|default:"0" }}</div>
+        <div class="stat-value">{{ olympiad_count|default:"0" }}</div>
         <div class="stat-label">Соревнований</div>
     </div>
     
     <div class="stat-card">
         <div class="stat-icon stat-problems">✓</div>
-        <div class="stat-value">{{ problems_count|default:"0" }}</div>
+        <div class="stat-value">{{ problem_count|default:"0" }}</div>
         <div class="stat-label">Заданий</div>
     </div>
     
     <div class="stat-card">
         <div class="stat-icon stat-submissions">📝</div>
-        <div class="stat-value">{{ submissions_count|default:"0" }}</div>
+        <div class="stat-value">{{ submission_count|default:"0" }}</div>
         <div class="stat-label">Решений</div>
     </div>
 </div>
@@ -623,13 +559,9 @@
     };
     
     document.addEventListener('DOMContentLoaded', function() {
-        // Определяем, используется ли темная тема
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-        const isDarkMode = prefersDarkScheme.matches;
-        
-        // Адаптивные цвета для графиков
-        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-        const textColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
+        // Всегда используем светлую тему для графиков
+        const gridColor = 'rgba(0, 0, 0, 0.1)';
+        const textColor = 'rgba(0, 0, 0, 0.7)';
         
         // График активности пользователей
         const usersCtx = document.getElementById('usersChart').getContext('2d');
@@ -640,8 +572,8 @@
                 datasets: [{
                     label: 'Новых пользователей',
                     data: userData.week.data,
-                    backgroundColor: 'rgba(74, 90, 248, 0.2)',
-                    borderColor: 'rgba(74, 90, 248, 1)',
+                    backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                    borderColor: 'rgba(67, 97, 238, 1)',
                     borderWidth: 2,
                     tension: 0.3,
                     fill: true
@@ -686,9 +618,9 @@
                 datasets: [{
                     data: [{{ active_olympiads|default:"0" }}, {{ upcoming_olympiads|default:"0" }}, {{ closed_olympiads|default:"0" }}],
                     backgroundColor: [
-                        'rgba(40, 167, 69, 0.8)',
-                        'rgba(255, 193, 7, 0.8)',
-                        'rgba(108, 117, 125, 0.8)'
+                        'rgba(6, 214, 160, 0.9)',
+                        'rgba(255, 126, 0, 0.9)',
+                        'rgba(108, 117, 125, 0.9)'
                     ],
                     borderWidth: 0
                 }]
@@ -720,7 +652,7 @@
                 datasets: [{
                     label: 'Отправленные решения',
                     data: submissionsData.week.data,
-                    backgroundColor: 'rgba(0, 184, 217, 0.7)',
+                    backgroundColor: 'rgba(0, 150, 199, 0.8)',
                     borderRadius: 6
                 }]
             },
@@ -759,26 +691,6 @@
         
         // Обновляем данные каждые 5 минут
         setInterval(loadDashboardData, 5 * 60 * 1000);
-        
-        // Слушаем изменения в предпочтениях темы
-        prefersDarkScheme.addEventListener('change', (e) => {
-            const newIsDarkMode = e.matches;
-            const newGridColor = newIsDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const newTextColor = newIsDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
-            
-            // Обновляем цвета на всех графиках
-            [usersChart, submissionsChart].forEach(chart => {
-                chart.options.scales.y.ticks.color = newTextColor;
-                chart.options.scales.y.grid.color = newGridColor;
-                chart.options.scales.x.ticks.color = newTextColor;
-                chart.options.scales.x.grid.color = newGridColor;
-                chart.update();
-            });
-            
-            // Обновляем цвета легенды в круговой диаграмме
-            olympiadsChart.options.plugins.legend.labels.color = newTextColor;
-            olympiadsChart.update();
-        });
     });
     
     // Функции для обновления графиков при клике на фильтры

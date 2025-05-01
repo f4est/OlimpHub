@@ -10,6 +10,7 @@ urlpatterns = [
     path('olympiad/<int:pk>/scoreboard/', views.ScoreboardView.as_view(), name='scoreboard'),
     path('olympiad/create/', views.OlympiadCreateView.as_view(), name='olymp_create'),
     path('olympiad/<int:pk>/edit/', views.OlympiadUpdateView.as_view(), name='olymp_edit'),
+    path('olympiad/<int:pk>/delete/', views.OlympiadDeleteView.as_view(), name='olymp_delete'),
     path('olympiad/<int:pk>/enroll/', views.enroll_olympiad, name='enroll_olympiad'),
     path('submit/<int:problem_id>/', views.submit_solution, name='submit'),
     path('review/<int:submission_id>/', views.review_submission, name='review_submission'),

@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -10,8 +9,11 @@ from olympiad.views import (
     admin_dashboard
 )
 
+# Импортируем кастомную админку
+from olimphub_project.admin import custom_admin_site
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', custom_admin_site.urls),  # Используем кастомную админку
     
     # Авторизация
     path('login/', LoginView.as_view(), name='login'),

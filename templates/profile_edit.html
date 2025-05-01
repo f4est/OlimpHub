@@ -41,7 +41,25 @@
           <input type="hidden" name="role" value="{{ user.profile.role }}">
           
           <div class="mb-4">
-            <h5 class="fw-semibold mb-3">Основная информация</h5>
+            <h5 class="fw-semibold mb-3">Личные данные</h5>
+            
+            <!-- Имя и фамилия -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.first_name.id_for_label }}" class="form-label fw-medium">{{ form.first_name.label }}</label>
+                {{ form.first_name|add_class:"form-control" }}
+                {% if form.first_name.errors %}
+                  <div class="invalid-feedback d-block">{{ form.first_name.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="{{ form.last_name.id_for_label }}" class="form-label fw-medium">{{ form.last_name.label }}</label>
+                {{ form.last_name|add_class:"form-control" }}
+                {% if form.last_name.errors %}
+                  <div class="invalid-feedback d-block">{{ form.last_name.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
             
             <!-- Аватар -->
             <div class="mb-4">

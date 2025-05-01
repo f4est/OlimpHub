@@ -40,7 +40,7 @@
               <li><a class="dropdown-item" href="{% url 'olymp_create' %}">
                 <i class="bi bi-plus-circle me-2 text-success"></i>Создать соревнование
               </a></li>
-              <li><a class="dropdown-item" href="{% url 'index' %}?my=true">
+              <li><a class="dropdown-item" href="{% url 'index' %}?my=1">
                 <i class="bi bi-list-check me-2 text-primary"></i>Мои соревнования
               </a></li>
               {% if user.profile.is_admin %}
@@ -84,7 +84,7 @@
                 <i class="bi bi-person me-2"></i>Профиль
               </a></li>
               {% if user.profile.is_teacher or user.profile.is_admin %}
-              <li><a class="dropdown-item" href="{% url 'index' %}?my=true">
+              <li><a class="dropdown-item" href="{% url 'index' %}?my=1">
                 <i class="bi bi-mortarboard me-2"></i>Мои соревнования
               </a></li>
               {% endif %}
@@ -143,9 +143,9 @@
       </div>
       <div class="col-md-3 small">
         <h6 class="mb-3 text-secondary">Контакты</h6>
-        <div class="text-light mb-2"><i class="bi bi-envelope me-2"></i>info@olimphub.com</div>
+        <div class="text-light mb-2"><i class="bi bi-envelope me-2"></i>smagulovalimara@icloud.com</div>
         <div class="text-light mb-2"><i class="bi bi-telephone me-2"></i>+7 (777) 555-35-35</div>
-        <div class="text-light mb-2"><i class="bi bi-geo-alt me-2"></i>г.Алматы, ул.Жубанов, 10а</div>
+        <div class="text-light mb-2"><i class="bi bi-geo-alt me-2"></i>Казахстан, Талгарский район, село Жаналык, Рахимова 13</div>
         <div class="text-light"><i class="bi bi-clock me-2"></i>Пн-Пт: 9:00 - 18:00</div>
       </div>
     </div>
